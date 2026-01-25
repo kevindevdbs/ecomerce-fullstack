@@ -1,0 +1,45 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../app/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+model Product {
+  id                 Int               @id @default(autoincrement())
+  name               String
+  image              String
+  categoryId  Int
+  category    Category @relation(fields: [categoryId], references: [id])
+  price              Float
+  shortDescription   String
+  fullDescription    String
+  details            String[]
+  hasLetterSelection Boolean?          @default(false)
+  variants           ProductVariant[]  @relation("ProductVariants")
+  wholesaleOptions   WholesaleOption[] @relation("WholesaleOptions")
+}
+
+model ProductVariant {
+  id        String   @id
+  name      String
+  colorHex  String
+  images    String[]
+  productId Int
+  product   Product  @relation("ProductVariants", fields: [productId], references: [id])
+}
+
+model WholesaleOption {
+  id          Int     @id @default(autoincrement())
+  minQuantity Int
+  unitPrice   Float
+  productId   Int
+  product     Product @relation("WholesaleOptions", fields: [productId], references: [id])
+}
+model Category {
+  id       Int       @id @default(autoincrement())
+  name     String    @unique
+  image    String?
+  products Product[]
+}
