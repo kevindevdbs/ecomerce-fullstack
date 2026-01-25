@@ -2,7 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowLeft, Truck, ShieldCheck, Gift } from "lucide-react";
 
-import prisma from "@/lib/prisma"; // Seu cliente Prisma
+import prisma from "@/lib/prisma";
 
 import ProductGallery from "@/components/product/ProductGallery";
 import ProductCard from "@/components/product/ProductCard";
@@ -22,7 +22,7 @@ export default async function ProductPage(props: ProductPageProps) {
     notFound();
   }
 
-  // 1. Busca o produto com TODAS as relações
+  // 1. Busca o produto com TODAS as relações necessárias
   const product = await prisma.product.findUnique({
     where: { id: productId },
     include: {
@@ -36,42 +36,23 @@ export default async function ProductPage(props: ProductPageProps) {
     notFound();
   }
 
-  // --- DIAGNÓSTICO (Olhe no seu Terminal do VS Code) ---
+  // --- LOGS DE DIAGNÓSTICO (Aparecem no terminal do VS Code) ---
   console.log("========================================");
-  console.log(`🔎 DETALHES DO PRODUTO (ID: ${product.id})`);
-  console.log(`📸 Imagem Principal (Coluna 'image'):`, product.image);
-  console.log(`🎨 Variantes encontradas:`, product.variants.length);
-  product.variants.forEach((v, index) => {
-    console.log(`   - Variante ${index + 1} (${v.name}):`, v.images);
-  });
-  // -----------------------------------------------------
+  console.log(`🔎 PRODUTO CARREGADO: ${product.name}`);
 
   // 2. Lógica Reforçada de Extração de Imagens
-  // Pegamos a imagem principal
   const mainImage = product.image ? [product.image] : [];
-
-  // Pegamos as imagens das variantes (garantindo que seja array)
   const variantImages = product.variants.flatMap((v) => v.images || []);
 
-  // Juntamos tudo.
-  // IMPORTANTE: Removemos apenas valores nulos/undefined, mas mantemos as strings.
-  // Se suas imagens no banco forem URLs, elas aparecerão.
-  let allImages = [...mainImage, ...variantImages].filter(
+  // Junta tudo e remove vazios/nulos
+  const allImages = [...mainImage, ...variantImages].filter(
     (img) => img !== null && img !== undefined && img !== "",
   );
 
-  // Se, por algum motivo bizarro, ainda estiver vazio, usamos um placeholder visual para debug
-  if (allImages.length === 0) {
-    console.log("⚠️ AVISO: Nenhuma imagem válida encontrada após extração.");
-  } else {
-    console.log(
-      `✅ Total de imagens enviadas para galeria: ${allImages.length}`,
-      allImages,
-    );
-  }
+  console.log(`📸 Total de imagens: ${allImages.length}`);
   console.log("========================================");
 
-  // 3. Busca produtos relacionados
+  // 3. Busca produtos relacionados (mesma categoria)
   const relatedProducts = await prisma.product.findMany({
     where: {
       categoryId: product.categoryId,
@@ -123,26 +104,17 @@ export default async function ProductPage(props: ProductPageProps) {
               </span>
 
               {/* Título */}
-              <h1 className="text-3xl md:text-4xl lg:text-5xl font-extrabold text-slate-900 leading-tight mb-6">
+              <h1 className="text-3xl md:text-4xl lg:text-5xl font-extrabold text-slate-900 leading-tight mb-4">
                 {product.name}
               </h1>
 
-              {/* Preço Base e Descrição Curta */}
-              <div className="mb-8 pb-8 border-b border-slate-100">
-                <div className="flex items-end gap-3 mb-4">
-                  <p className="text-4xl lg:text-5xl font-extrabold text-transparent bg-clip-text bg-linear-to-r from-pink-500 to-purple-600">
-                    R$ {product.price.toFixed(2).replace(".", ",")}
-                  </p>
-                  <span className="text-slate-400 font-medium mb-1 text-lg">
-                    unidade
-                  </span>
-                </div>
-                <p className="text-slate-600 text-lg leading-relaxed font-medium">
-                  {product.shortDescription}
-                </p>
-              </div>
+              {/* Descrição Curta */}
+              <p className="text-slate-600 text-lg leading-relaxed font-medium mb-2">
+                {product.shortDescription}
+              </p>
 
-              {/* COMPONENTE INTERATIVO */}
+              {/* COMPONENTE INTERATIVO (Preço, Cores, Quantidade, Botões) */}
+              {/* Passamos o objeto completo. O 'as any' é temporário para facilitar a tipagem do Prisma vs Interface Manual */}
               <ProductDetailsContainer product={product as any} />
 
               {/* ÍCONES DE BENEFÍCIOS */}
@@ -186,19 +158,23 @@ export default async function ProductPage(props: ProductPageProps) {
               dangerouslySetInnerHTML={{ __html: product.fullDescription }}
             />
 
-            <h3 className="text-2xl font-bold text-slate-800 mt-10 mb-6">
-              Detalhes Técnicos
-            </h3>
-            <ul className="not-prose space-y-3">
-              {product.details.map((detail, index) => (
-                <li key={index} className="flex items-start gap-3">
-                  <span className="w-2.5 h-2.5 rounded-full bg-pink-500 mt-2 shrink-0"></span>
-                  <span className="text-slate-700 font-medium text-lg">
-                    {detail}
-                  </span>
-                </li>
-              ))}
-            </ul>
+            {product.details && product.details.length > 0 && (
+              <>
+                <h3 className="text-2xl font-bold text-slate-800 mt-10 mb-6">
+                  Detalhes Técnicos
+                </h3>
+                <ul className="not-prose space-y-3">
+                  {product.details.map((detail, index) => (
+                    <li key={index} className="flex items-start gap-3">
+                      <span className="w-2.5 h-2.5 rounded-full bg-pink-500 mt-2 shrink-0"></span>
+                      <span className="text-slate-700 font-medium text-lg">
+                        {detail}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              </>
+            )}
           </div>
         </section>
 
@@ -215,6 +191,7 @@ export default async function ProductPage(props: ProductPageProps) {
             </div>
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 md:gap-8">
               {relatedProducts.map((relatedProduct) => (
+                // Passamos o produto inteiro para o card atualizado
                 <ProductCard
                   key={relatedProduct.id}
                   product={relatedProduct as any}

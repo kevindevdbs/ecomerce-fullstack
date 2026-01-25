@@ -1,11 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import ProductActions from "./ProductActions";
 import VariantSelector from "./VariantSelector";
 import QuantitySelector from "./QuantitySelector";
 
-// Definição do tipo compatível com o retorno do Prisma
 interface ProductWithRelations {
   id: number;
   name: string;
@@ -14,7 +13,6 @@ interface ProductWithRelations {
   shortDescription: string;
   fullDescription: string;
   hasLetterSelection: boolean | null;
-  // Relações do Prisma
   variants: {
     id: string;
     name: string;
@@ -28,7 +26,6 @@ interface ProductWithRelations {
     unitPrice: number;
     productId: number;
   }[];
-  // Categoria pode vir como objeto pelo Prisma
   category: {
     name: string;
   } | null;
@@ -38,7 +35,6 @@ interface ProductDetailsContainerProps {
   product: ProductWithRelations;
 }
 
-// Lista do alfabeto para o dropdown
 const ALPHABET = Array.from({ length: 26 }, (_, i) =>
   String.fromCharCode(65 + i),
 );
@@ -46,32 +42,64 @@ const ALPHABET = Array.from({ length: 26 }, (_, i) =>
 export default function ProductDetailsContainer({
   product,
 }: ProductDetailsContainerProps) {
-  // Garante que existe pelo menos uma variante para começar
   const initialVariantId =
     product.variants && product.variants.length > 0
       ? product.variants[0].id
       : "";
 
-  // Estados
   const [selectedVariantId, setSelectedVariantId] = useState(initialVariantId);
   const [quantity, setQuantity] = useState(1);
   const [selectedLetter, setSelectedLetter] = useState<string>("");
+
+  // --- LÓGICA DE PREÇO DINÂMICO ---
+  const currentPrice = useMemo(() => {
+    if (!product.wholesaleOptions || product.wholesaleOptions.length === 0) {
+      return product.price;
+    }
+
+    // Ordena as opções de atacado da maior quantidade para a menor
+    const options = [...product.wholesaleOptions].sort(
+      (a, b) => b.minQuantity - a.minQuantity,
+    );
+
+    // Encontra a primeira opção que satisfaz a quantidade atual
+    const activeOption = options.find((opt) => quantity >= opt.minQuantity);
+
+    return activeOption ? activeOption.unitPrice : product.price;
+  }, [product.price, product.wholesaleOptions, quantity]);
 
   // Validação
   const isLetterSelectionValid =
     !product.hasLetterSelection ||
     (product.hasLetterSelection && selectedLetter !== "");
-
-  // Encontra a variante selecionada
   const selectedVariant = product.variants?.find(
     (v) => v.id === selectedVariantId,
   );
 
   return (
-    <div className="flex flex-col gap-8 mt-8">
+    <div className="flex flex-col gap-6 mt-6">
+      {/* --- EXIBIÇÃO DO PREÇO (MOVIDA PARA CÁ) --- */}
+      <div className="pb-6 border-b border-slate-100">
+        <div className="flex items-end gap-3 mb-2">
+          <p className="text-4xl lg:text-5xl font-extrabold text-transparent bg-clip-text bg-linear-to-r from-pink-500 to-purple-600 transition-all duration-300">
+            R$ {currentPrice.toFixed(2).replace(".", ",")}
+          </p>
+          <span className="text-slate-400 font-medium mb-1 text-lg">
+            unidade
+          </span>
+        </div>
+
+        {/* Mostra aviso se estiver aplicando preço de atacado */}
+        {currentPrice < product.price && (
+          <p className="text-green-600 font-bold text-sm bg-green-50 inline-block px-3 py-1 rounded-full animate-pulse">
+            Opa! Preço de atacado aplicado 🎉
+          </p>
+        )}
+      </div>
+
       <div className="flex flex-col gap-8 items-start">
-        {/* --- SELETOR DE VARIAÇÃO (CORES) --- */}
-        <div className="flex-1">
+        {/* SELETOR DE VARIAÇÃO */}
+        <div className="flex-1 w-full">
           {product.variants &&
             product.variants.length > 1 &&
             selectedVariant && (
@@ -91,7 +119,7 @@ export default function ProductDetailsContainer({
           )}
         </div>
 
-        {/* --- SELETOR DE QUANTIDADE --- */}
+        {/* SELETOR DE QUANTIDADE */}
         <div>
           <QuantitySelector
             quantity={quantity}
@@ -101,11 +129,11 @@ export default function ProductDetailsContainer({
         </div>
       </div>
 
-      {/* --- SELETOR DE LETRAS --- */}
+      {/* SELETOR DE LETRAS */}
       {product.hasLetterSelection && (
-        <div className="border-t border-slate-100 pt-6">
+        <div className="border-t border-slate-100 pt-6 w-full">
           <h3 className="text-sm font-bold text-slate-800 mb-3 uppercase tracking-wider flex items-center gap-2">
-            Personalização: Escolha a Letra
+            Personalização: Escolha a Letra{" "}
             <span className="text-pink-500 text-xs normal-case bg-pink-50 px-2 py-0.5 rounded-full">
               Obrigatório
             </span>
@@ -125,15 +153,6 @@ export default function ProductDetailsContainer({
                 </option>
               ))}
             </select>
-            <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 md:right-[calc(100%-16rem)] text-slate-400">
-              <svg
-                className="fill-current h-4 w-4"
-                xmlns="http://www.w3.org/2000/svg"
-                viewBox="0 0 20 20"
-              >
-                <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z" />
-              </svg>
-            </div>
           </div>
           {selectedLetter === "" && (
             <p className="text-pink-600 text-sm font-medium mt-3 animate-pulse">
@@ -143,41 +162,32 @@ export default function ProductDetailsContainer({
         </div>
       )}
 
-      {/* --- AVISO DE ATACADO --- */}
+      {/* AVISO DE ATACADO (Lista de regras) */}
       {product.wholesaleOptions && product.wholesaleOptions.length > 0 && (
-        <div className="bg-green-50 text-green-800 p-4 rounded-2xl text-sm border-2 border-green-200/70 flex items-start gap-3 shadow-sm">
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            viewBox="0 0 24 24"
-            fill="currentColor"
-            className="w-6 h-6 text-green-600 shrink-0"
-          >
-            <path
-              fillRule="evenodd"
-              d="M12 2.25c-5.385 0-9.75 4.365-9.75 9.75s4.365 9.75 9.75 9.75 9.75-4.365 9.75-9.75S17.385 2.25 12 2.25zm.006 4.869a.75.75 0 01.806 0 3.75 3.75 0 11-5.305 5.306.75.75 0 010 .807 5.25 5.25 0 104.499-6.113zM7.32 9.652a2.25 2.25 0 113.015 3.014 2.25 2.25 0 01-3.015-3.014zm6.704 4.878a2.25 2.25 0 113.014 3.015 2.25 2.25 0 01-3.014-3.015z"
-              clipRule="evenodd"
-            />
-          </svg>
-          <div>
-            <strong className="block text-base mb-1">
-              Oportunidade de Atacado!
-            </strong>
-            Compre{" "}
-            <strong>{product.wholesaleOptions[0].minQuantity} unidades</strong>{" "}
-            ou mais deste item e o preço cai para{" "}
-            <strong className="text-green-700 underline">
-              R${" "}
-              {product.wholesaleOptions[0].unitPrice
-                .toFixed(2)
-                .replace(".", ",")}{" "}
-              cada
-            </strong>
-            . O desconto será aplicado automaticamente no carrinho.
-          </div>
+        <div className="bg-blue-50 text-blue-800 p-4 rounded-2xl text-sm border border-blue-100 flex flex-col gap-2">
+          <strong className="flex items-center gap-2 text-blue-700">
+            📢 Descontos Progressivos:
+          </strong>
+          <ul className="space-y-1 ml-1">
+            {product.wholesaleOptions
+              .sort((a, b) => a.minQuantity - b.minQuantity)
+              .map((opt) => (
+                <li
+                  key={opt.id}
+                  className="flex justify-between items-center bg-white/50 px-3 py-1 rounded-lg"
+                >
+                  <span>
+                    Acima de <strong>{opt.minQuantity} un.</strong>
+                  </span>
+                  <span className="font-bold text-blue-700">
+                    R$ {opt.unitPrice.toFixed(2).replace(".", ",")}
+                  </span>
+                </li>
+              ))}
+          </ul>
         </div>
       )}
 
-      {/* Botões de Ação */}
       <ProductActions
         product={product}
         selectedVariantId={selectedVariantId}

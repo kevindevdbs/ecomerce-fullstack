@@ -1,35 +1,49 @@
-// components/admin/ProductForm.tsx
 "use client";
 
 import { useState } from "react";
 import { createProduct } from "@/app/actions/create-product";
-import { Plus, Trash, Save, Image as ImageIcon } from "lucide-react";
+import { updateProduct } from "@/app/actions/update-product"; // Importamos a nova action
+import { Plus, Trash, Save } from "lucide-react";
 
 interface Category {
   id: number;
   name: string;
 }
 
+interface ProductFormProps {
+  categories: Category[];
+  initialData?: any; // Dados do produto para edição (opcional)
+}
+
 export default function ProductForm({
   categories,
-}: {
-  categories: Category[];
-}) {
+  initialData,
+}: ProductFormProps) {
   const [isLoading, setIsLoading] = useState(false);
+  const isEditing = !!initialData; // Verifica se é modo edição
 
-  // Estados para listas dinâmicas
-  const [variants, setVariants] = useState([
-    { name: "Padrão", colorHex: "#ffffff", image: "" },
-  ]);
-  const [wholesale, setWholesale] = useState<any[]>([]);
+  // --- ESTADOS INICIAIS (Se tiver initialData, usa ele. Se não, usa padrão vazio) ---
 
-  // Funções para gerenciar variantes
-  const addVariant = () => {
+  const [variants, setVariants] = useState(
+    initialData?.variants?.map((v: any) => ({
+      name: v.name,
+      colorHex: v.colorHex,
+      image: v.images && v.images.length > 0 ? v.images[0] : "",
+    })) || [{ name: "Padrão", colorHex: "#ffffff", image: "" }],
+  );
+
+  const [wholesale, setWholesale] = useState<any[]>(
+    initialData?.wholesaleOptions?.map((w: any) => ({
+      minQuantity: w.minQuantity,
+      unitPrice: w.unitPrice,
+    })) || [],
+  );
+
+  // --- MANIPULADORES (Iguais ao anterior) ---
+  const addVariant = () =>
     setVariants([...variants, { name: "", colorHex: "#000000", image: "" }]);
-  };
-  const removeVariant = (index: number) => {
+  const removeVariant = (index: number) =>
     setVariants(variants.filter((_, i) => i !== index));
-  };
   const updateVariant = (index: number, field: string, value: string) => {
     const newVariants = [...variants];
     // @ts-ignore
@@ -37,26 +51,30 @@ export default function ProductForm({
     setVariants(newVariants);
   };
 
-  // Funções para gerenciar atacado
-  const addWholesale = () => {
+  const addWholesale = () =>
     setWholesale([...wholesale, { minQuantity: 5, unitPrice: 0 }]);
-  };
-  const removeWholesale = (index: number) => {
+  const removeWholesale = (index: number) =>
     setWholesale(wholesale.filter((_, i) => i !== index));
-  };
   const updateWholesale = (index: number, field: string, value: string) => {
     const newList = [...wholesale];
     newList[index][field] = value;
     setWholesale(newList);
   };
 
+  // --- SUBMIT ---
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setIsLoading(true);
     const formData = new FormData(e.currentTarget);
 
-    // Chamamos a Server Action passando os dados extras
-    await createProduct(formData, variants, wholesale);
+    if (isEditing) {
+      // Modo Edição: Chama updateProduct com o ID
+      await updateProduct(initialData.id, formData, variants, wholesale);
+    } else {
+      // Modo Criação: Chama createProduct normal
+      await createProduct(formData, variants, wholesale);
+    }
+
     setIsLoading(false);
   };
 
@@ -65,7 +83,7 @@ export default function ProductForm({
       {/* 1. Informações Básicas */}
       <div className="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 space-y-4">
         <h2 className="text-xl font-bold text-slate-800 mb-4 border-b pb-2">
-          Informações Básicas
+          {isEditing ? `Editando: ${initialData.name}` : "Informações Básicas"}
         </h2>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -77,6 +95,7 @@ export default function ProductForm({
               required
               name="name"
               type="text"
+              defaultValue={initialData?.name}
               className="w-full p-3 border rounded-xl bg-slate-50 focus:ring-2 focus:ring-pink-500 outline-none"
               placeholder="Ex: Chaveiro Letra"
             />
@@ -90,6 +109,7 @@ export default function ProductForm({
               name="price"
               type="number"
               step="0.01"
+              defaultValue={initialData?.price}
               className="w-full p-3 border rounded-xl bg-slate-50 focus:ring-2 focus:ring-pink-500 outline-none"
               placeholder="0.00"
             />
@@ -104,6 +124,7 @@ export default function ProductForm({
             <select
               required
               name="categoryId"
+              defaultValue={initialData?.categoryId}
               className="w-full p-3 border rounded-xl bg-slate-50 focus:ring-2 focus:ring-pink-500 outline-none"
             >
               <option value="">Selecione...</option>
@@ -118,18 +139,14 @@ export default function ProductForm({
             <label className="block text-sm font-bold text-slate-700 mb-1">
               Imagem Principal (URL)
             </label>
-            <div className="flex gap-2">
-              <input
-                required
-                name="image"
-                type="text"
-                className="w-full p-3 border rounded-xl bg-slate-50 focus:ring-2 focus:ring-pink-500 outline-none"
-                placeholder="https://..."
-              />
-            </div>
-            <p className="text-xs text-slate-400 mt-1">
-              Cole o link da imagem aqui.
-            </p>
+            <input
+              required
+              name="image"
+              type="text"
+              defaultValue={initialData?.image}
+              className="w-full p-3 border rounded-xl bg-slate-50 focus:ring-2 focus:ring-pink-500 outline-none"
+              placeholder="https://..."
+            />
           </div>
         </div>
 
@@ -142,21 +159,23 @@ export default function ProductForm({
             name="shortDescription"
             type="text"
             maxLength={150}
+            defaultValue={initialData?.shortDescription}
             className="w-full p-3 border rounded-xl bg-slate-50 focus:ring-2 focus:ring-pink-500 outline-none"
-            placeholder="Resumo que aparece no card..."
+            placeholder="Resumo..."
           />
         </div>
 
         <div>
           <label className="block text-sm font-bold text-slate-700 mb-1">
-            Descrição Completa (HTML permitido)
+            Descrição Completa (HTML)
           </label>
           <textarea
             required
             name="fullDescription"
             rows={4}
+            defaultValue={initialData?.fullDescription}
             className="w-full p-3 border rounded-xl bg-slate-50 focus:ring-2 focus:ring-pink-500 outline-none"
-            placeholder="Detalhes do produto..."
+            placeholder="Detalhes..."
           />
         </div>
 
@@ -167,8 +186,9 @@ export default function ProductForm({
           <textarea
             name="details"
             rows={3}
+            defaultValue={initialData?.details?.join("\n")}
             className="w-full p-3 border rounded-xl bg-slate-50 focus:ring-2 focus:ring-pink-500 outline-none"
-            placeholder="Material: Resina&#10;Tamanho: 5cm&#10;Peso: 20g"
+            placeholder="Material: Resina..."
           />
         </div>
 
@@ -176,6 +196,7 @@ export default function ProductForm({
           <input
             name="hasLetterSelection"
             type="checkbox"
+            defaultChecked={initialData?.hasLetterSelection}
             id="letterCheck"
             className="w-5 h-5 text-pink-600 rounded focus:ring-pink-500"
           />
@@ -183,7 +204,7 @@ export default function ProductForm({
             htmlFor="letterCheck"
             className="text-sm font-bold text-slate-700 cursor-pointer"
           >
-            Este produto exige escolha de Letra (Ex: Chaveiro)?
+            Exige escolha de Letra?
           </label>
         </div>
       </div>
@@ -203,15 +224,13 @@ export default function ProductForm({
           </button>
         </div>
 
-        {variants.map((variant, index) => (
+        {variants.map((variant: any, index: number) => (
           <div
             key={index}
             className="flex flex-col md:flex-row gap-3 items-end bg-slate-50 p-4 rounded-xl border border-slate-200"
           >
             <div className="flex-1 w-full">
-              <label className="text-xs font-bold text-slate-500">
-                Nome (Ex: Rosa)
-              </label>
+              <label className="text-xs font-bold text-slate-500">Nome</label>
               <input
                 type="text"
                 value={variant.name}
@@ -221,30 +240,25 @@ export default function ProductForm({
               />
             </div>
             <div className="w-full md:w-24">
-              <label className="text-xs font-bold text-slate-500">
-                Cor Hex
-              </label>
-              <div className="flex items-center gap-2">
-                <input
-                  type="color"
-                  value={variant.colorHex}
-                  onChange={(e) =>
-                    updateVariant(index, "colorHex", e.target.value)
-                  }
-                  className="h-10 w-10 cursor-pointer border-0 p-0 rounded-lg overflow-hidden"
-                />
-              </div>
+              <label className="text-xs font-bold text-slate-500">Cor</label>
+              <input
+                type="color"
+                value={variant.colorHex}
+                onChange={(e) =>
+                  updateVariant(index, "colorHex", e.target.value)
+                }
+                className="h-10 w-10 cursor-pointer border-0 p-0 rounded-lg overflow-hidden"
+              />
             </div>
             <div className="flex-1 w-full">
               <label className="text-xs font-bold text-slate-500">
-                Imagem da Variante (URL)
+                Imagem URL
               </label>
               <input
                 type="text"
                 value={variant.image}
                 onChange={(e) => updateVariant(index, "image", e.target.value)}
                 className="w-full p-2 border rounded-lg"
-                placeholder="https://..."
               />
             </div>
             <button
@@ -262,25 +276,17 @@ export default function ProductForm({
       {/* 3. Atacado */}
       <div className="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 space-y-4">
         <div className="flex justify-between items-center border-b pb-2">
-          <h2 className="text-xl font-bold text-slate-800">
-            Preço de Atacado (Opcional)
-          </h2>
+          <h2 className="text-xl font-bold text-slate-800">Preço de Atacado</h2>
           <button
             type="button"
             onClick={addWholesale}
             className="flex items-center gap-1 text-sm font-bold text-green-600 hover:bg-green-50 px-3 py-1 rounded-full transition-colors"
           >
-            <Plus size={16} /> Adicionar Regra
+            <Plus size={16} /> Adicionar
           </button>
         </div>
 
-        {wholesale.length === 0 && (
-          <p className="text-slate-400 text-sm italic">
-            Nenhuma regra de atacado configurada.
-          </p>
-        )}
-
-        {wholesale.map((item, index) => (
+        {wholesale.map((item: any, index: number) => (
           <div
             key={index}
             className="flex gap-4 items-end bg-slate-50 p-4 rounded-xl border border-slate-200"
@@ -300,7 +306,7 @@ export default function ProductForm({
             </div>
             <div>
               <label className="text-xs font-bold text-slate-500">
-                Preço Unitário (R$)
+                Valor Unit. (R$)
               </label>
               <input
                 type="number"
@@ -328,13 +334,14 @@ export default function ProductForm({
         <button
           type="submit"
           disabled={isLoading}
-          className="flex items-center gap-2 bg-pink-600 text-white px-8 py-4 rounded-full font-bold text-lg hover:bg-pink-700 hover:scale-105 transition-all shadow-xl disabled:opacity-50 disabled:cursor-not-allowed"
+          className="flex items-center gap-2 bg-pink-600 text-white px-8 py-4 rounded-full font-bold text-lg hover:bg-pink-700 hover:scale-105 transition-all shadow-xl disabled:opacity-50"
         >
           {isLoading ? (
             "Salvando..."
           ) : (
             <>
-              <Save size={20} /> Cadastrar Produto
+              <Save size={20} />{" "}
+              {isEditing ? "Atualizar Produto" : "Cadastrar Produto"}
             </>
           )}
         </button>

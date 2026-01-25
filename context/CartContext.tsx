@@ -1,4 +1,3 @@
-// context/CartContext.tsx
 "use client";
 
 import {
@@ -10,10 +9,9 @@ import {
 } from "react";
 
 // Definição dos tipos
-interface ProductVariant {
-  id: string;
-  name: string;
-  images: string[];
+interface WholesaleOption {
+  minQuantity: number;
+  unitPrice: number;
 }
 
 export interface CartProduct {
@@ -21,12 +19,12 @@ export interface CartProduct {
   name: string;
   price: number;
   image: string;
-  variants?: ProductVariant[];
+  wholesaleOptions?: WholesaleOption[]; // Adicionado aqui
   [key: string]: any;
 }
 
 export interface CartItem {
-  cartId: string; // ID único para o item no carrinho (produto + variante)
+  cartId: string;
   product: CartProduct;
   variantId: string;
   variantName?: string;
@@ -50,6 +48,8 @@ interface CartContextType {
   openCart: () => void;
   closeCart: () => void;
   toggleCart: () => void;
+  // Helper para pegar o preço unitário atual de um item
+  getItemPrice: (item: CartItem) => number;
 }
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
@@ -59,7 +59,6 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [isLoaded, setIsLoaded] = useState(false);
 
-  // 1. Carregar do LocalStorage ao iniciar
   useEffect(() => {
     const savedCart = localStorage.getItem("@ecommerce:cart");
     if (savedCart) {
@@ -72,20 +71,36 @@ export function CartProvider({ children }: { children: ReactNode }) {
     setIsLoaded(true);
   }, []);
 
-  // 2. Salvar no LocalStorage sempre que mudar
   useEffect(() => {
     if (isLoaded) {
       localStorage.setItem("@ecommerce:cart", JSON.stringify(cartItems));
     }
   }, [cartItems, isLoaded]);
 
-  // Adicionar item
+  // Função auxiliar para calcular preço baseado na quantidade (Atacado)
+  const getItemPrice = (item: CartItem) => {
+    const { product, quantity } = item;
+
+    if (!product.wholesaleOptions || product.wholesaleOptions.length === 0) {
+      return product.price;
+    }
+
+    // Ordena regras (maior quantidade primeiro)
+    const options = [...product.wholesaleOptions].sort(
+      (a, b) => b.minQuantity - a.minQuantity,
+    );
+
+    // Encontra regra aplicável
+    const activeOption = options.find((opt) => quantity >= opt.minQuantity);
+
+    return activeOption ? activeOption.unitPrice : product.price;
+  };
+
   const addItemToCart = (
     product: CartProduct,
     quantity: number,
     variantId: string = "",
   ) => {
-    // Encontrar informações da variante se houver
     let variantName = "";
     let variantImage = "";
 
@@ -93,7 +108,6 @@ export function CartProvider({ children }: { children: ReactNode }) {
       const variant = product.variants.find((v: any) => v.id === variantId);
       if (variant) {
         variantName = variant.name;
-        // Pega a primeira imagem da variante ou usa a do produto
         variantImage =
           variant.images && variant.images.length > 0
             ? variant.images[0]
@@ -107,7 +121,6 @@ export function CartProvider({ children }: { children: ReactNode }) {
       const existingItem = prev.find((item) => item.cartId === uniqueId);
 
       if (existingItem) {
-        // Se já existe, apenas aumenta a quantidade
         return prev.map((item) =>
           item.cartId === uniqueId
             ? { ...item, quantity: item.quantity + quantity }
@@ -115,7 +128,6 @@ export function CartProvider({ children }: { children: ReactNode }) {
         );
       }
 
-      // Se não existe, adiciona novo
       return [
         ...prev,
         {
@@ -129,15 +141,13 @@ export function CartProvider({ children }: { children: ReactNode }) {
       ];
     });
 
-    setIsCartOpen(true); // Abre o carrinho automaticamente
+    setIsCartOpen(true);
   };
 
-  // Remover item
   const removeFromCart = (cartId: string) => {
     setCartItems((prev) => prev.filter((item) => item.cartId !== cartId));
   };
 
-  // Atualizar quantidade
   const updateQuantity = (cartId: string, delta: number) => {
     setCartItems((prev) =>
       prev.map((item) => {
@@ -151,16 +161,15 @@ export function CartProvider({ children }: { children: ReactNode }) {
   };
 
   const clearCart = () => setCartItems([]);
-
-  // Controles do Drawer
   const openCart = () => setIsCartOpen(true);
   const closeCart = () => setIsCartOpen(false);
   const toggleCart = () => setIsCartOpen((prev) => !prev);
 
-  // Cálculos
   const cartCount = cartItems.reduce((acc, item) => acc + item.quantity, 0);
+
+  // Cálculo TOTAL agora usa a função inteligente de preço
   const cartTotal = cartItems.reduce(
-    (acc, item) => acc + item.product.price * item.quantity,
+    (acc, item) => acc + getItemPrice(item) * item.quantity,
     0,
   );
 
@@ -178,6 +187,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
         openCart,
         closeCart,
         toggleCart,
+        getItemPrice, // Exportamos caso precise usar na UI
       }}
     >
       {children}
