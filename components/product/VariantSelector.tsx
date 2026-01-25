@@ -1,10 +1,18 @@
 "use client";
 
-import { ProductVariant } from "@/data/Products";
 import clsx from "clsx";
 
+// Interface para variante compatível com Prisma
+interface Variant {
+  id: string;
+  name: string;
+  colorHex: string;
+  images: string[];
+  productId: number;
+}
+
 interface VariantSelectorProps {
-  variants: ProductVariant[];
+  variants: Variant[];
   selectedId: string;
   onSelect: (id: string) => void;
 }
@@ -14,8 +22,8 @@ export default function VariantSelector({
   selectedId,
   onSelect,
 }: VariantSelectorProps) {
-  // Se só tiver uma variante, nem mostra o seletor
-  if (variants.length <= 1) {
+  // Se só tiver uma variante (ou nenhuma), não mostra o seletor
+  if (!variants || variants.length <= 1) {
     return null;
   }
 

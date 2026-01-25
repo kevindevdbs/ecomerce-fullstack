@@ -2,10 +2,11 @@
 
 import ProductCard from "../product/ProductCard";
 import EmptyState from "./EmptyState";
-import { Product } from "@/app/page";
+// Removemos a importação de Product antiga e definimos uma interface mais genérica se necessário,
+// ou confiamos que o ProductCard vai aceitar o objeto.
 
 interface ProductGridProps {
-  filteredProducts: Product[];
+  filteredProducts: any[]; // Usamos any aqui para facilitar, pois o tipo vem do server component
   category?: string;
   clearFilters: () => void;
 }
@@ -13,7 +14,6 @@ interface ProductGridProps {
 export default function ProductGrid({
   filteredProducts,
   clearFilters,
-  category,
 }: ProductGridProps) {
   return (
     <div className="w-full lg:w-3/4">
@@ -29,8 +29,8 @@ export default function ProductGrid({
           {filteredProducts.map((product) => (
             <ProductCard
               key={product.id}
-              {...product}
-              category={category ?? ""}
+              // MUDANÇA AQUI: Passamos o objeto inteiro como propriedade 'product'
+              product={product}
             />
           ))}
         </div>

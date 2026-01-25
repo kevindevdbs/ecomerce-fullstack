@@ -1,15 +1,41 @@
-
 "use client";
 
 import { useState } from "react";
-
-import { Product } from "@/data/Products";
 import ProductActions from "./ProductActions";
 import VariantSelector from "./VariantSelector";
 import QuantitySelector from "./QuantitySelector";
 
+// Definição do tipo compatível com o retorno do Prisma
+interface ProductWithRelations {
+  id: number;
+  name: string;
+  image: string;
+  price: number;
+  shortDescription: string;
+  fullDescription: string;
+  hasLetterSelection: boolean | null;
+  // Relações do Prisma
+  variants: {
+    id: string;
+    name: string;
+    colorHex: string;
+    images: string[];
+    productId: number;
+  }[];
+  wholesaleOptions: {
+    id: number;
+    minQuantity: number;
+    unitPrice: number;
+    productId: number;
+  }[];
+  // Categoria pode vir como objeto pelo Prisma
+  category: {
+    name: string;
+  } | null;
+}
+
 interface ProductDetailsContainerProps {
-  product: Product;
+  product: ProductWithRelations;
 }
 
 // Lista do alfabeto para o dropdown
@@ -22,24 +48,22 @@ export default function ProductDetailsContainer({
 }: ProductDetailsContainerProps) {
   // Garante que existe pelo menos uma variante para começar
   const initialVariantId =
-    product.variants.length > 0 ? product.variants[0].id : "";
+    product.variants && product.variants.length > 0
+      ? product.variants[0].id
+      : "";
 
   // Estados
   const [selectedVariantId, setSelectedVariantId] = useState(initialVariantId);
   const [quantity, setQuantity] = useState(1);
   const [selectedLetter, setSelectedLetter] = useState<string>("");
 
-  // Validação: A seleção só é válida SE (o produto NÃO pede letra) OU (ele pede E a letra foi escolhida)
+  // Validação
   const isLetterSelectionValid =
     !product.hasLetterSelection ||
     (product.hasLetterSelection && selectedLetter !== "");
 
-  if (!initialVariantId) {
-    return <div className="text-red-500">Erro: Produto indisponível.</div>;
-  }
-
-  // Encontra a variante selecionada para pegar o nome dela
-  const selectedVariant = product.variants.find(
+  // Encontra a variante selecionada
+  const selectedVariant = product.variants?.find(
     (v) => v.id === selectedVariantId,
   );
 
@@ -48,22 +72,26 @@ export default function ProductDetailsContainer({
       <div className="flex flex-col gap-8 items-start">
         {/* --- SELETOR DE VARIAÇÃO (CORES) --- */}
         <div className="flex-1">
-          {/* --- MODIFICAÇÃO AQUI: Só mostra o texto se tiver mais de 1 opção --- */}
-          {product.variants.length > 1 && selectedVariant && (
-            <p className="text-sm text-slate-500 mb-2">
-              Variação selecionada:{" "}
-              <strong className="text-slate-700">{selectedVariant.name}</strong>
-            </p>
+          {product.variants &&
+            product.variants.length > 1 &&
+            selectedVariant && (
+              <p className="text-sm text-slate-500 mb-2">
+                Variação selecionada:{" "}
+                <strong className="text-slate-700">
+                  {selectedVariant.name}
+                </strong>
+              </p>
+            )}
+          {product.variants && (
+            <VariantSelector
+              variants={product.variants}
+              selectedId={selectedVariantId}
+              onSelect={setSelectedVariantId}
+            />
           )}
-          {/* O seletor já se esconde automaticamente se só tiver 1 opção */}
-          <VariantSelector
-            variants={product.variants}
-            selectedId={selectedVariantId}
-            onSelect={setSelectedVariantId}
-          />
         </div>
 
-        {/* --- SELETOR DE QUANTIDADE (PARA TODOS OS ITENS) --- */}
+        {/* --- SELETOR DE QUANTIDADE --- */}
         <div>
           <QuantitySelector
             quantity={quantity}
@@ -73,8 +101,7 @@ export default function ProductDetailsContainer({
         </div>
       </div>
 
-      {/* --- SELETOR DE LETRAS (SÓ PARA CHAVEIROS) --- */}
-      {/* Esta área só aparece se o produto tiver hasLetterSelection: true no arquivo de dados */}
+      {/* --- SELETOR DE LETRAS --- */}
       {product.hasLetterSelection && (
         <div className="border-t border-slate-100 pt-6">
           <h3 className="text-sm font-bold text-slate-800 mb-3 uppercase tracking-wider flex items-center gap-2">
@@ -98,7 +125,6 @@ export default function ProductDetailsContainer({
                 </option>
               ))}
             </select>
-            {/* Ícone de seta para baixo no select */}
             <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 md:right-[calc(100%-16rem)] text-slate-400">
               <svg
                 className="fill-current h-4 w-4"
@@ -117,8 +143,7 @@ export default function ProductDetailsContainer({
         </div>
       )}
 
-      {/* AVISO DE ATACADO (SÓ PARA CHAVEIROS) */}
-      {/* Esta área só aparece se o produto tiver wholesaleOptions no arquivo de dados */}
+      {/* --- AVISO DE ATACADO --- */}
       {product.wholesaleOptions && product.wholesaleOptions.length > 0 && (
         <div className="bg-green-50 text-green-800 p-4 rounded-2xl text-sm border-2 border-green-200/70 flex items-start gap-3 shadow-sm">
           <svg
@@ -152,7 +177,7 @@ export default function ProductDetailsContainer({
         </div>
       )}
 
-      {/* Botões de Ação (Passamos o estado e a validação) */}
+      {/* Botões de Ação */}
       <ProductActions
         product={product}
         selectedVariantId={selectedVariantId}

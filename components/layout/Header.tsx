@@ -4,12 +4,14 @@ import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { Menu, X } from "lucide-react";
-
-
+// 1. Importamos o hook
+import { useCart } from "@/context/CartContext";
 
 export default function Header() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
+  // 2. Pegamos a função de abrir e a contagem do contexto
+  const { openCart, cartCount } = useCart();
 
   const toggleMobileMenu = () => {
     setIsMobileMenuOpen(!isMobileMenuOpen);
@@ -127,8 +129,8 @@ export default function Header() {
           <div className="flex items-center relative z-10">
             <button
               aria-label="Carrinho de compras"
-              
-              className="group bg-white p-2.5 rounded-xl hover:bg-pink-300 transition-all duration-200 shadow-sm relative"
+              onClick={openCart} // 3. ADICIONADO AQUI: Abre o carrinho ao clicar
+              className="group bg-white p-2.5 rounded-xl hover:bg-pink-300 transition-all duration-200 shadow-sm relative cursor-pointer"
             >
               <Image
                 src="/cart.png"
@@ -139,10 +141,12 @@ export default function Header() {
                 style={{ transform: "scaleX(-1)" }}
               />
 
-
+              {/* 4. ADICIONADO AQUI: Lógica para mostrar o número apenas se tiver itens */}
+              {cartCount > 0 && (
                 <span className="absolute -top-1.5 -right-1.5 bg-pink-500 text-white text-[10px] font-bold h-5 w-5 flex items-center justify-center rounded-full border-2 border-white animate-in zoom-in">
+                  {cartCount}
                 </span>
-            
+              )}
             </button>
           </div>
         </div>

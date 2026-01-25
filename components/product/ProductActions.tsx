@@ -1,13 +1,20 @@
 "use client";
 
 import { FaShoppingCart, FaWhatsapp } from "react-icons/fa";
-import { Product } from "@/data/Products";
-// --- IMPORTANTE: O HOOK DO CARRINHO ---
 import { useCart } from "@/context/CartContext";
 
-// Atualizamos a interface para receber os dados da seleção que vêm do Container pai
+// Interface simplificada compatível com o Prisma e com o que o CartContext espera
+interface ProductProps {
+  id: number;
+  name: string;
+  price: number;
+  image: string;
+  // Permitimos outros campos (como category, variants) passarem sem erro
+  [key: string]: any;
+}
+
 interface ProductActionsProps {
-  product: Product;
+  product: ProductProps;
   selectedVariantId: string;
   quantity: number;
   selectedLetter?: string;
@@ -18,13 +25,18 @@ export default function ProductActions({
   product,
   selectedVariantId,
   quantity,
+  selectedLetter,
+  isDisabled = false,
 }: ProductActionsProps) {
-  // Pegamos a função de adicionar do nosso contexto
   const { addItemToCart } = useCart();
 
   const handleAddToCart = () => {
-    // --- AQUI ESTÁ A MÁGICA ---
-    // Chama a função do contexto passando o produto, a quantidade e a variante
+    if (isDisabled) return;
+
+    // Chama o contexto.
+    // OBS: Se o seu CartContext precisar da "selectedLetter", você precisará
+    // atualizar a função addItemToCart no Context também.
+    // Por enquanto, mandamos como estava antes.
     addItemToCart(product, quantity, selectedVariantId);
   };
 
@@ -32,14 +44,22 @@ export default function ProductActions({
     <div className="flex flex-col sm:flex-row gap-4 mb-10">
       {/* Botão Adicionar ao Carrinho */}
       <button
-        onClick={handleAddToCart} // <-- Agora chama a função real
-        className="flex-1 flex items-center justify-center gap-3 px-8 py-4 bg-linear-to-r from-pink-500 to-purple-600 text-white font-bold text-lg rounded-full shadow-lg shadow-pink-200/50 hover:shadow-xl hover:scale-[1.02] active:scale-[0.98] transition-all group"
+        onClick={handleAddToCart}
+        disabled={isDisabled}
+        className={`flex-1 flex items-center justify-center gap-3 px-8 py-4 text-white font-bold text-lg rounded-full shadow-lg transition-all group ${
+          isDisabled
+            ? "bg-slate-300 cursor-not-allowed shadow-none"
+            : "bg-linear-to-r from-pink-500 to-purple-600 shadow-pink-200/50 hover:shadow-xl hover:scale-[1.02] active:scale-[0.98]"
+        }`}
       >
-        <FaShoppingCart className="w-5 h-5 group-hover:rotate-12 transition-transform" style={{ transform: "scaleX(-1)" }} />
-        Adicionar ao Carrinho
+        <FaShoppingCart
+          className="w-5 h-5 group-hover:rotate-12 transition-transform"
+          style={{ transform: "scaleX(-1)" }}
+        />
+        {isDisabled ? "Selecione as opções" : "Adicionar ao Carrinho"}
       </button>
 
-      {/* Botão Dúvidas (WhatsApp) - Mantido */}
+      {/* Botão Dúvidas (WhatsApp) */}
       <a
         href={`https://wa.me/5511999999999?text=Olá, tenho uma dúvida sobre o produto: ${product.name}`}
         target="_blank"

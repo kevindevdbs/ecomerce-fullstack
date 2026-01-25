@@ -1,13 +1,12 @@
-
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowLeft, Truck, ShieldCheck, Gift } from "lucide-react";
 
-import { getProductById, getRelatedProducts } from "@/data/Products"; 
+import prisma from "@/lib/prisma"; // Seu cliente Prisma
+
 import ProductGallery from "@/components/product/ProductGallery";
 import ProductCard from "@/components/product/ProductCard";
 import ProductDetailsContainer from "@/components/product/ProductDetailsContainer";
-
 
 interface ProductPageProps {
   params: Promise<{
@@ -15,22 +14,78 @@ interface ProductPageProps {
   }>;
 }
 
-// --- MUDANÇA 2: O componente agora é 'async' ---
 export default async function ProductPage(props: ProductPageProps) {
-  // --- MUDANÇA 3: Esperamos (await) os parâmetros resolverem ---
   const params = await props.params;
-
-  // Agora sim, params.id é a string "1"
   const productId = parseInt(params.id);
 
-  const product = getProductById(productId);
+  if (isNaN(productId)) {
+    notFound();
+  }
+
+  // 1. Busca o produto com TODAS as relações
+  const product = await prisma.product.findUnique({
+    where: { id: productId },
+    include: {
+      variants: true,
+      wholesaleOptions: true,
+      category: true,
+    },
+  });
 
   if (!product) {
     notFound();
   }
 
-  const relatedProducts = getRelatedProducts(product);
-  const allImages = product.variants.flatMap((v) => v.images);
+  // --- DIAGNÓSTICO (Olhe no seu Terminal do VS Code) ---
+  console.log("========================================");
+  console.log(`🔎 DETALHES DO PRODUTO (ID: ${product.id})`);
+  console.log(`📸 Imagem Principal (Coluna 'image'):`, product.image);
+  console.log(`🎨 Variantes encontradas:`, product.variants.length);
+  product.variants.forEach((v, index) => {
+    console.log(`   - Variante ${index + 1} (${v.name}):`, v.images);
+  });
+  // -----------------------------------------------------
+
+  // 2. Lógica Reforçada de Extração de Imagens
+  // Pegamos a imagem principal
+  const mainImage = product.image ? [product.image] : [];
+
+  // Pegamos as imagens das variantes (garantindo que seja array)
+  const variantImages = product.variants.flatMap((v) => v.images || []);
+
+  // Juntamos tudo.
+  // IMPORTANTE: Removemos apenas valores nulos/undefined, mas mantemos as strings.
+  // Se suas imagens no banco forem URLs, elas aparecerão.
+  let allImages = [...mainImage, ...variantImages].filter(
+    (img) => img !== null && img !== undefined && img !== "",
+  );
+
+  // Se, por algum motivo bizarro, ainda estiver vazio, usamos um placeholder visual para debug
+  if (allImages.length === 0) {
+    console.log("⚠️ AVISO: Nenhuma imagem válida encontrada após extração.");
+  } else {
+    console.log(
+      `✅ Total de imagens enviadas para galeria: ${allImages.length}`,
+      allImages,
+    );
+  }
+  console.log("========================================");
+
+  // 3. Busca produtos relacionados
+  const relatedProducts = await prisma.product.findMany({
+    where: {
+      categoryId: product.categoryId,
+      NOT: {
+        id: product.id,
+      },
+    },
+    take: 4,
+    include: {
+      variants: true,
+      category: true,
+      wholesaleOptions: true,
+    },
+  });
 
   return (
     <div className="min-h-screen bg-slate-50">
@@ -64,7 +119,7 @@ export default async function ProductPage(props: ProductPageProps) {
             <div className="flex flex-col">
               {/* Categoria */}
               <span className="inline-block text-sm font-bold tracking-wider text-pink-600 uppercase bg-pink-100 px-4 py-1.5 rounded-full self-start mb-6">
-                {product.category}
+                {product.category?.name || "Geral"}
               </span>
 
               {/* Título */}
@@ -88,7 +143,7 @@ export default async function ProductPage(props: ProductPageProps) {
               </div>
 
               {/* COMPONENTE INTERATIVO */}
-              <ProductDetailsContainer product={product} />
+              <ProductDetailsContainer product={product as any} />
 
               {/* ÍCONES DE BENEFÍCIOS */}
               <div className="grid grid-cols-3 gap-4 mt-12 pt-8 border-t border-slate-100">
@@ -160,7 +215,10 @@ export default async function ProductPage(props: ProductPageProps) {
             </div>
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 md:gap-8">
               {relatedProducts.map((relatedProduct) => (
-                <ProductCard key={relatedProduct.id} product={relatedProduct} />
+                <ProductCard
+                  key={relatedProduct.id}
+                  product={relatedProduct as any}
+                />
               ))}
             </div>
           </section>
