@@ -43,7 +43,7 @@ export default function ProductForm({
   const addVariant = () =>
     setVariants([...variants, { name: "", colorHex: "#000000", image: "" }]);
   const removeVariant = (index: number) =>
-    setVariants(variants.filter((_, i) => i !== index));
+    setVariants(variants.filter((_: any, i: number) => i !== index));
   const updateVariant = (index: number, field: string, value: string) => {
     const newVariants = [...variants];
     // @ts-ignore
@@ -330,7 +330,7 @@ export default function ProductForm({
       </div>
 
       {/* Botão Salvar */}
-      <div className="fixed bottom-0 left-0 right-0 p-4 bg-white border-t border-slate-200 z-40 flex justify-center">
+      <div className="fixed bottom-0 left-0 right-0 p-4 bg-white border-t border-slate-200 z-40 flex justify-right md:justify-center">
         <button
           type="submit"
           disabled={isLoading}

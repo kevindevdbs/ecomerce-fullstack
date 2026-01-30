@@ -1,13 +1,11 @@
-// app/layout.tsx
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 
-// 1. IMPORTAR O PROVIDER E O DRAWER
+// 1. IMPORTAR O CONTEXTO E O DRAWER
 import { CartProvider } from "@/context/CartContext";
 import CartDrawer from "@/context/CartDrawer";
 
-// Seus componentes de layout
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import BackToTopButton from "@/components/ui/BackToTopButton";
@@ -33,22 +31,19 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="pt-BR">
+    <html lang="pt-br">
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        {/* 2. ENVOLVER TUDO COM O CARTPROVIDER */}
         <CartProvider>
           <Header />
 
           {children}
 
+          <BackToTopButton />
           <Footer />
-
-          {/* 3. COLOCAR O COMPONENTE VISUAL DO CARRINHO AQUI */}
           <CartDrawer />
         </CartProvider>
-          <BackToTopButton />
       </body>
     </html>
   );

@@ -4,11 +4,9 @@ import Image from "next/image";
 import { Plus, Package, ArrowUpRight, Pencil } from "lucide-react";
 import DeleteProductButton from "@/components/admin/DeleteProductButton";
 
-// Garante que a lista esteja sempre atualizada (não faz cache estático)
 export const dynamic = "force-dynamic";
 
 export default async function AdminDashboard() {
-  // Busca todos os produtos ordenados pelo mais novo (ID decrescente)
   const products = await prisma.product.findMany({
     orderBy: { id: "desc" },
     include: {
@@ -18,9 +16,9 @@ export default async function AdminDashboard() {
   });
 
   return (
-    <div className="min-h-screen bg-slate-50 pb-20">
-      {/* Cabeçalho do Admin */}
-      <header className="bg-white border-b border-slate-200 sticky top-0 z-30">
+    <div className="min-h-screen bg-slate-50 pb-20 pt-24">
+      {/* ALTERADO: Removido 'sticky top-20 z-30'. Agora é um header normal. */}
+      <header className="bg-white border-b border-slate-200">
         <div className="container mx-auto px-4 sm:px-6 h-20 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="bg-pink-100 p-2 rounded-lg">
@@ -52,7 +50,6 @@ export default async function AdminDashboard() {
               {products.length}
             </p>
           </div>
-          {/* Você pode adicionar mais cards aqui futuramente (ex: Total de Categorias) */}
         </div>
 
         {/* Lista de Produtos */}
@@ -118,7 +115,6 @@ export default async function AdminDashboard() {
                       </td>
                       <td className="px-6 py-4 text-right">
                         <div className="flex justify-end items-center gap-2">
-                          {/* Link para ver o produto no site real */}
                           <Link
                             href={`/produto/${product.id}`}
                             target="_blank"
@@ -128,7 +124,6 @@ export default async function AdminDashboard() {
                             <ArrowUpRight size={20} />
                           </Link>
 
-                          {/* Link para EDITAR o produto */}
                           <Link
                             href={`/admin/editar-produto/${product.id}`}
                             className="p-2 text-slate-400 hover:text-amber-600 hover:bg-amber-50 rounded-lg transition-colors"
@@ -137,7 +132,6 @@ export default async function AdminDashboard() {
                             <Pencil size={20} />
                           </Link>
 
-                          {/* Botão de EXCLUIR produto */}
                           <DeleteProductButton
                             id={product.id}
                             name={product.name}

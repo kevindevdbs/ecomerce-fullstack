@@ -16,7 +16,6 @@ export default async function EditProductPage(props: EditPageProps) {
 
   if (isNaN(productId)) notFound();
 
-  // Busca o produto e categorias
   const [product, categories] = await Promise.all([
     prisma.product.findUnique({
       where: { id: productId },
@@ -31,7 +30,8 @@ export default async function EditProductPage(props: EditPageProps) {
   if (!product) notFound();
 
   return (
-    <div className="min-h-screen bg-slate-50 py-10 px-4 pb-32">
+    // ADICIONADO: pt-28
+    <div className="min-h-screen bg-slate-50 pt-28 pb-32 px-4">
       <div className="container mx-auto max-w-4xl">
         <div className="mb-8 flex items-center gap-4">
           <Link
@@ -50,7 +50,6 @@ export default async function EditProductPage(props: EditPageProps) {
           </div>
         </div>
 
-        {/* Passamos o produto como initialData */}
         <ProductForm categories={categories} initialData={product} />
       </div>
     </div>

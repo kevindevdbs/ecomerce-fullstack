@@ -1,19 +1,18 @@
-// app/admin/novo-produto/page.tsx
 import prisma from "@/lib/prisma";
 import ProductForm from "@/components/admin/ProductForm";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 
 export default async function NewProductPage() {
-  // Busca categorias para o select
   const categories = await prisma.category.findMany();
 
   return (
-    <div className="min-h-screen bg-slate-50 py-10 px-4 pb-32">
+    // ADICIONADO: pt-28 (substituindo py-10 no topo)
+    <div className="min-h-screen bg-slate-50 pt-28 pb-32 px-4">
       <div className="container mx-auto max-w-4xl">
         <div className="mb-8 flex items-center gap-4">
           <Link
-            href="/"
+            href="/admin"
             className="p-2 bg-white rounded-full shadow-sm hover:text-pink-600 transition-colors"
           >
             <ArrowLeft size={20} />
