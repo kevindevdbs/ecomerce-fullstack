@@ -38,7 +38,7 @@ export default function ProductForm({
   const addVariant = () =>
     setVariants([...variants, { name: "", colorHex: "#000000", image: "" }]);
   const removeVariant = (index: number) =>
-    setVariants(variants.filter((_, i) => i !== index));
+    setVariants(variants.filter((_:any, i:any) => i !== index));
   const updateVariant = (index: number, field: string, value: string) => {
     const newVariants = [...variants];
     // @ts-ignore
@@ -48,7 +48,7 @@ export default function ProductForm({
   const addWholesale = () =>
     setWholesale([...wholesale, { minQuantity: 5, unitPrice: 0 }]);
   const removeWholesale = (index: number) =>
-    setWholesale(wholesale.filter((_, i) => i !== index));
+    setWholesale(wholesale.filter((_:any, i:any) => i !== index));
   const updateWholesale = (index: number, field: string, value: string) => {
     const newList = [...wholesale];
     newList[index][field] = value;
