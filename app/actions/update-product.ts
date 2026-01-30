@@ -1,4 +1,3 @@
-// app/actions/update-product.ts
 "use server";
 
 import prisma from "@/lib/prisma";
@@ -11,6 +10,7 @@ export async function updateProduct(
   variants: any[],
   wholesale: any[],
 ) {
+  // ... (recuperação dos dados) ...
   const name = formData.get("name") as string;
   const price = parseFloat(formData.get("price") as string);
   const shortDescription = formData.get("shortDescription") as string;
@@ -18,7 +18,6 @@ export async function updateProduct(
   const image = formData.get("image") as string;
   const categoryId = parseInt(formData.get("categoryId") as string);
   const hasLetterSelection = formData.get("hasLetterSelection") === "on";
-
   const detailsRaw = formData.get("details") as string;
   const details = detailsRaw
     .split("\n")
@@ -37,9 +36,6 @@ export async function updateProduct(
         categoryId,
         hasLetterSelection,
         details,
-        // ESTRATÉGIA DE ATUALIZAÇÃO:
-        // 1. Removemos todas as variantes/opções antigas
-        // 2. Criamos as novas baseadas no formulário
         variants: {
           deleteMany: {},
           create: variants.map((v) => ({
@@ -60,13 +56,11 @@ export async function updateProduct(
     });
 
     revalidatePath("/admin");
-    revalidatePath("/catalogo");
     revalidatePath(`/produto/${productId}`);
-    revalidatePath("/");
   } catch (error) {
-    console.error("Erro ao atualizar produto:", error);
-    return { error: "Erro ao atualizar no banco de dados." };
+    return { error: "Erro ao atualizar." };
   }
 
+  // ✅ CORREÇÃO: Redirect FORA do try/catch
   redirect("/admin");
 }

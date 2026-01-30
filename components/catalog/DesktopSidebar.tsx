@@ -108,7 +108,7 @@ export default function DesktopSidebar({
                   <span
                     className={`text-slate-600 group-hover:text-purple-600 transition-colors text-sm ${selectedPriceRange === range.id ? "font-bold text-slate-800" : "font-medium"}`}
                   >
-                    {range.min} - {range.max}
+                    R${range.min} - R${range.max}
                   </span>
                 </label>
               </li>

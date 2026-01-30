@@ -51,15 +51,6 @@ export default function ProductCard({ product }: ProductCardProps) {
             {categoryName}
           </span>
         )}
-
-        {/* Botão Rápido de Adicionar */}
-        <button
-          aria-label="Adicionar ao carrinho"
-          className="absolute bottom-3 right-3 bg-white p-3.5 rounded-full shadow-md shadow-pink-100/50 md:translate-y-16 md:group-hover:translate-y-0 md:opacity-0 md:group-hover:opacity-100 opacity-100 translate-y-0 transition-all duration-300 ease-out hover:bg-pink-50 text-pink-500 hover:text-pink-600 hover:scale-110 active:scale-95 z-10 border border-pink-50/50 cursor-pointer"
-          onClick={handleAddToCart}
-        >
-          <FaShoppingCart size={18} style={{ transform: "scaleX(-1)" }} />
-        </button>
       </div>
 
       {/* Informações */}

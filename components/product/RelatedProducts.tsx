@@ -1,8 +1,7 @@
-import { Product } from "@/data/Products";
+
 import SectionTitle from "@/components/ui/SectionTitle";
-// Importe o seu ProductCard.
-// Se ele tiver botão de comprar interativo, ele deve ter 'use client' no topo dele.
 import ProductCard from "@/components/product/ProductCard";
+import { Product } from "@/app/generated/prisma/client";
 
 interface RelatedProductsProps {
   products: Product[];
@@ -17,7 +16,13 @@ export default function RelatedProducts({ products }: RelatedProductsProps) {
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-6 md:gap-8">
         {products.map((relatedProduct) => (
-          <ProductCard key={relatedProduct.id} product={relatedProduct} />
+          <ProductCard
+            key={relatedProduct.id}
+            product={{
+              ...relatedProduct,
+              category: null,
+            }}
+          />
         ))}
       </div>
     </section>

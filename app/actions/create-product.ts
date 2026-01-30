@@ -1,4 +1,3 @@
-// app/actions/create-product.ts
 "use server";
 
 import prisma from "@/lib/prisma";
@@ -10,7 +9,7 @@ export async function createProduct(
   variants: any[],
   wholesale: any[],
 ) {
-  // 1. Extrair dados básicos
+  // ... (recuperação dos dados do form) ...
   const name = formData.get("name") as string;
   const price = parseFloat(formData.get("price") as string);
   const shortDescription = formData.get("shortDescription") as string;
@@ -18,8 +17,6 @@ export async function createProduct(
   const image = formData.get("image") as string;
   const categoryId = parseInt(formData.get("categoryId") as string);
   const hasLetterSelection = formData.get("hasLetterSelection") === "on";
-
-  // 2. Processar detalhes (separados por quebra de linha ou vírgula)
   const detailsRaw = formData.get("details") as string;
   const details = detailsRaw
     .split("\n")
@@ -27,7 +24,6 @@ export async function createProduct(
     .filter((d) => d !== "");
 
   try {
-    // 3. Criar tudo no banco de uma vez (Transaction implícita do Prisma)
     await prisma.product.create({
       data: {
         name,
@@ -37,17 +33,15 @@ export async function createProduct(
         image,
         categoryId,
         hasLetterSelection,
-        details, // Array de strings
-        // Criação aninhada das Variantes
+        details,
         variants: {
           create: variants.map((v) => ({
-            id: crypto.randomUUID(), // Gera um ID único string
+            id: crypto.randomUUID(),
             name: v.name,
             colorHex: v.colorHex,
-            images: [v.image], // Por simplicidade, assumindo 1 imagem por variante no form inicial
+            images: [v.image],
           })),
         },
-        // Criação aninhada do Atacado
         wholesaleOptions: {
           create: wholesale.map((w) => ({
             minQuantity: parseInt(w.minQuantity),
@@ -57,14 +51,13 @@ export async function createProduct(
       },
     });
 
-    // 4. Atualizar o cache das páginas
     revalidatePath("/catalogo");
-    revalidatePath("/");
+    revalidatePath("/admin");
   } catch (error) {
-    console.error("Erro ao criar produto:", error);
-    return { error: "Erro ao salvar no banco de dados." };
+    console.error(error);
+    return { error: "Erro ao salvar." };
   }
 
-  // 5. Redirecionar para o catálogo
-  redirect("/catalogo");
+  // ✅ CORREÇÃO: Redirect FORA do try/catch
+  redirect("/admin");
 }

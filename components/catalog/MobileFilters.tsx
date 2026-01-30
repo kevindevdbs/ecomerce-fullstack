@@ -132,7 +132,7 @@ export default function MobileFilters({
                     <span
                       className={`text-slate-700 font-medium ${selectedPriceRange === range.id ? "text-purple-700 font-bold" : ""}`}
                     >
-                      {range.min} - {range.max}
+                        R$ {range.min} - R$ {range.max}
                     </span>
                     <div
                       className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all ${selectedPriceRange === range.id ? "border-purple-500" : "border-slate-300"}`}

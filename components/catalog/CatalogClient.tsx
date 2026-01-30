@@ -8,7 +8,18 @@ import ProductGrid from "./ProductGrid";
 import MobileFilters from "./MobileFilters";
 import { useMemo, useState } from "react";
 import Fuse from "fuse.js";
-import { Product } from "../../app/page";
+
+// Defina a interface Product localmente ou importe do local correto
+interface Product {
+  id: string | number;
+  name: string;
+  shortDescription?: string;
+  fullDescription?: string;
+  categoryId: string | number;
+  price: number;
+  variants?: Array<any>;
+  // Adicione outros campos conforme necessário
+}
 
 interface Category {
   id: string;
@@ -142,7 +153,7 @@ export default function CatalogPage({
         <ProductGrid
           filteredProducts={filteredProducts.map((product) => ({
             ...product,
-            variants: (product.variants ?? []).map((variant) => ({
+            variants: (product.variants ?? []).map((variant: any) => ({
               ...variant,
               id:
                 typeof variant.id === "string"

@@ -69,7 +69,7 @@ export default function ProductGallery({
       {/* --- MINIATURAS (THUMBNAILS) --- */}
       {/* Só mostra a lista se tiver mais de uma imagem válida */}
       {images && images.length > 1 && (
-        <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide snap-x px-1">
+        <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide snap-x px-1 pt-1">
           {images.map((img, index) => {
             // Pula imagens vazias
             if (!img) return null;

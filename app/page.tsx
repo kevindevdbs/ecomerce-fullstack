@@ -80,7 +80,7 @@ export default async function Home() {
                     </div>
                     <div className="relative w-24 h-28 sm:w-32 sm:h-36 md:w-44 md:h-52 lg:w-52 lg:h-64 shrink-0 -my-4 md:-my-8">
                       <Image
-                        src="/lirio.png"
+                        src="https://res.cloudinary.com/dheamyys5/image/upload/v1769814240/lirio_dl3fik.png"
                         alt="Lírio Ray Resina"
                         fill
                         className="object-contain"
@@ -119,7 +119,7 @@ export default async function Home() {
               <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[120%] h-[120%] bg-linear-to-tr from-pink-200 to-purple-200 rounded-full blur-3xl opacity-50 -z-10"></div>
               <div className="relative aspect-4/5 md:aspect-square rounded-4xl sm:rounded-[3rem] overflow-hidden shadow-[0_20px_50px_rgba(236,72,153,0.2)] border-4 border-white rotate-3 hover:rotate-0 transition-all duration-700 z-20">
                 <Image
-                  src="/logo.jpeg"
+                  src="https://res.cloudinary.com/dheamyys5/image/upload/v1769814238/logo_ox0dyy.jpg"
                   alt="Peça de resina destaque"
                   fill
                   className="object-cover"

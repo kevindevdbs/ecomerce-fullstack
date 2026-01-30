@@ -32,7 +32,7 @@ export default function ProcessSection() {
       {/* Imagem de fundo com overlay */}
       <div className="absolute inset-0 opacity-30">
         <Image
-          src="/logo.jpeg" // Lembre de usar uma imagem do processo aqui
+          src="https://res.cloudinary.com/dheamyys5/image/upload/v1769814238/logo_ox0dyy.jpg" // Lembre de usar uma imagem do processo aqui
           alt="Processo de criação"
           fill
           className="object-cover blur-sm object-center"
