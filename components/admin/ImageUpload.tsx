@@ -127,7 +127,7 @@ export default function ImageUpload({
           >
             {isUploading ? <>Enviando...</> : <>Escolher Imagem</>}
           </button>
-          <p className="text-[10px] text-slate-400 max-w-[150px] leading-tight">
+          <p className="text-[10px] text-slate-400 max-w-37.5 leading-tight">
             Suporta JPG, PNG ou WEBP. <br /> Tire uma foto ou escolha da
             galeria.
           </p>

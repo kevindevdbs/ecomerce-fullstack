@@ -1,7 +1,7 @@
 
 import SectionTitle from "@/components/ui/SectionTitle";
 import ProductCard from "@/components/product/ProductCard";
-import { Product } from "@/app/generated/prisma/client";
+import { Product } from "@/app/prisma/client";
 
 interface RelatedProductsProps {
   products: Product[];
