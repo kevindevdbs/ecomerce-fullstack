@@ -17,13 +17,14 @@ export async function createCategory(formData: FormData) {
       },
     });
 
+    // ATUALIZA TODAS AS PÁGINAS QUE MOSTRAM CATEGORIAS
     revalidatePath("/admin/categorias");
     revalidatePath("/catalogo");
+    revalidatePath("/"); // <--- ESSA LINHA FALTAVA (Atualiza a Home)
   } catch (error) {
     return { error: "Erro ao criar categoria." };
   }
 
-  // ✅ CORREÇÃO: O redirect TEM que ficar aqui fora (depois do catch)
   redirect("/admin/categorias");
 }
 
@@ -43,11 +44,11 @@ export async function updateCategory(id: number, formData: FormData) {
 
     revalidatePath("/admin/categorias");
     revalidatePath("/catalogo");
+    revalidatePath("/"); // <--- ESSA LINHA FALTAVA
   } catch (error) {
     return { error: "Erro ao atualizar categoria." };
   }
 
-  // ✅ CORREÇÃO: Redirect aqui fora
   redirect("/admin/categorias");
 }
 
@@ -69,7 +70,11 @@ export async function deleteCategory(id: number) {
       where: { id },
     });
 
+    // ATUALIZA AS PÁGINAS
     revalidatePath("/admin/categorias");
+    revalidatePath("/catalogo");
+    revalidatePath("/");
+
     return { success: true };
   } catch (error) {
     return { error: "Erro ao deletar categoria." };
