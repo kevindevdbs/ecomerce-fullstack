@@ -11,6 +11,7 @@ interface ProductCardProps {
     name: string;
     image: string;
     price: number;
+    shortDescription?: string; // Adicionado como opcional
     // Aceita category como string (antigo) ou objeto (novo Prisma)
     category: string | { name: string } | null;
     [key: string]: any; // Permite outras propriedades sem erro
@@ -45,9 +46,9 @@ export default function ProductCard({ product }: ProductCardProps) {
           />
         </Link>
 
-        {/* Badge de Categoria */}
+        {/* Badge de Categoria - AJUSTADO PARA MOBILE */}
         {categoryName && (
-          <span className="absolute top-3 left-3 bg-white/95 backdrop-blur-sm text-[10px] uppercase tracking-wider font-bold text-slate-600 px-3 py-1.5 rounded-full border border-slate-100/50 shadow-sm">
+          <span className="absolute top-2 left-2 md:top-3 md:left-3 bg-white/95 backdrop-blur-sm text-[9px] md:text-[10px] uppercase tracking-wider font-bold text-slate-600 px-2 py-1 md:px-3 md:py-1.5 rounded-full border border-slate-100/50 shadow-sm max-w-[75%] truncate">
             {categoryName}
           </span>
         )}
@@ -63,6 +64,16 @@ export default function ProductCard({ product }: ProductCardProps) {
             {product.name}
           </h3>
         </Link>
+
+        {/* DESCRIÇÃO CURTA ADICIONADA AQUI */}
+        {product.shortDescription && (
+          <p className="text-sm text-slate-500 mb-3 line-clamp-2 leading-relaxed hidden md:block">
+            {product.shortDescription}
+          </p>
+        )}
+        {/* Obs: Adicionei 'hidden md:block' acima se quiser esconder no celular para economizar espaço. 
+            Se quiser mostrar no celular também, remova o 'hidden md:block'. */}
+
         <div className="mt-auto pt-2 flex items-end justify-between font-extrabold">
           <p className="text-transparent bg-clip-text bg-linear-to-r from-pink-500 to-purple-600 text-xl md:text-2xl">
             R$ {product.price.toFixed(2).replace(".", ",")}
