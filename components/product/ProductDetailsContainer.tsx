@@ -78,7 +78,7 @@ export default function ProductDetailsContainer({
 
   return (
     <div className="flex flex-col gap-6 mt-6">
-      {/* --- EXIBIÇÃO DO PREÇO (MOVIDA PARA CÁ) --- */}
+      {/* --- EXIBIÇÃO DO PREÇO --- */}
       <div className="pb-6 border-b border-slate-100">
         <div className="flex items-end gap-3 mb-2">
           <p className="text-4xl lg:text-5xl font-extrabold text-transparent bg-clip-text bg-linear-to-r from-pink-500 to-purple-600 transition-all duration-300">
@@ -128,12 +128,13 @@ export default function ProductDetailsContainer({
           )}
         </div>
 
-        {/* SELETOR DE QUANTIDADE */}
+        {/* SELETOR DE QUANTIDADE - AGORA COM ONCHANGE */}
         <div>
           <QuantitySelector
             quantity={quantity}
             onIncrease={() => setQuantity((q) => q + 1)}
             onDecrease={() => setQuantity((q) => Math.max(1, q - 1))}
+            onChange={(val) => setQuantity(val)}
           />
         </div>
       </div>

@@ -34,10 +34,8 @@ export default async function ProductPage({ params }: ProductPageProps) {
     return notFound();
   }
 
-  // --- CORREÇÃO AQUI: PREPARANDO AS IMAGENS PARA A GALERIA ---
-  // Criamos uma lista única contendo a imagem principal + imagens das variações
+  // --- IMAGENS ---
   const allImages = [product.image];
-
   if (product.variants.length > 0) {
     product.variants.forEach((variant) => {
       if (variant.images && variant.images.length > 0) {
@@ -45,13 +43,11 @@ export default async function ProductPage({ params }: ProductPageProps) {
       }
     });
   }
-
-  // Filtra para remover itens vazios e duplicados (limpeza)
   const uniqueImages = Array.from(new Set(allImages)).filter(
     (img) => img && img !== "",
   );
 
-  // Buscar produtos relacionados
+  // --- PRODUTOS RELACIONADOS ---
   const relatedProducts = await prisma.product.findMany({
     where: {
       categoryId: product.categoryId,
@@ -64,26 +60,22 @@ export default async function ProductPage({ params }: ProductPageProps) {
   return (
     <div className="min-h-screen bg-slate-50 pt-28 pb-20">
       <div className="container mx-auto px-4 max-w-6xl">
-        {/* Bloco Principal */}
+        {/* Bloco Principal (Galeria e Info Lateral) */}
         <div className="bg-white rounded-3xl shadow-sm border border-slate-100 p-6 md:p-10 mb-12">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-10 md:gap-16">
-            {/* Esquerda: Galeria Corrigida */}
             <div className="w-full">
               <ProductGallery
-                images={uniqueImages} // Agora passamos o array certo
+                images={uniqueImages}
                 productName={product.name}
-                
               />
             </div>
-
-            {/* Direita: Detalhes */}
             <div className="flex flex-col">
               <ProductDetailsContainer product={product} />
             </div>
           </div>
         </div>
 
-        {/* Descrição Completa */}
+        {/* --- DESCRIÇÃO E DETALHES --- */}
         <div className="bg-white rounded-3xl shadow-sm border border-slate-100 p-8 md:p-12 mb-16">
           <h2 className="text-2xl font-bold text-slate-800 mb-6 flex items-center gap-3">
             <span className="w-1 h-8 bg-pink-600 rounded-full block"></span>
@@ -93,12 +85,31 @@ export default async function ProductPage({ params }: ProductPageProps) {
           <div className="text-slate-600 leading-relaxed whitespace-pre-line text-lg">
             {product.fullDescription}
           </div>
+
+          {/* ADICIONADO: Seção de Detalhes abaixo da descrição */}
+          {product.details && product.details.length > 0 && (
+            <div className="mt-8 pt-8 border-t border-slate-100">
+              <h3 className="text-xl font-bold text-slate-800 mb-4">
+                Detalhes e Especificações
+              </h3>
+              <ul className="space-y-2">
+                {product.details.map((detail, index) => (
+                  <li
+                    key={index}
+                    className="flex items-start gap-3 text-slate-600 text-lg"
+                  >
+                    <span className="mt-2 w-1.5 h-1.5 bg-pink-500 rounded-full shrink-0" />
+                    <span>{detail}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
         </div>
 
         {/* Produtos Relacionados */}
         {relatedProducts.length > 0 && (
           <div className="mt-20">
-            {/* Agora o subtitle vai funcionar sem erro */}
             <SectionTitle
               title="Você também pode gostar"
               subtitle="Veja outros itens que combinam com sua escolha"
