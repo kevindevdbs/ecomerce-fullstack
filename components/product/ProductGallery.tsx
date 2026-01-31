@@ -108,7 +108,6 @@ export default function ProductGallery({
                 alt={`Imagem ${index + 1} de ${productName}`}
                 fill
                 className="object-cover"
-                priority={index === 0}
                 sizes="(max-width: 768px) 100vw, 50vw"
                 draggable={false} // Evita arrastar o elemento img nativo
               />
