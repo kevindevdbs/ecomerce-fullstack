@@ -1,16 +1,19 @@
 generator client {
   provider = "prisma-client-js"
+  // Não coloque output aqui!
 }
 
 datasource db {
   provider = "postgresql"
 }
+
+
 model Product {
   id                 Int               @id @default(autoincrement())
   name               String
   image              String
-  categoryId  Int
-  category    Category @relation(fields: [categoryId], references: [id])
+  categoryId         Int
+  category           Category          @relation(fields: [categoryId], references: [id])
   price              Float
   shortDescription   String
   fullDescription    String
@@ -36,6 +39,7 @@ model WholesaleOption {
   productId   Int
   product     Product @relation("WholesaleOptions", fields: [productId], references: [id])
 }
+
 model Category {
   id       Int       @id @default(autoincrement())
   name     String    @unique
