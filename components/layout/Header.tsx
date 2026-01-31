@@ -79,6 +79,7 @@ export default function Header() {
               className="relative h-12 w-12 shrink-0 rounded-full overflow-hidden bg-white shadow-sm border border-white/50 block"
             >
               <Image
+                priority={true}
                 src="https://res.cloudinary.com/dheamyys5/image/upload/v1769814238/logo_ox0dyy.jpg"
                 alt="Logo Ray Resina"
                 className="object-cover"
@@ -133,6 +134,7 @@ export default function Header() {
               className="group bg-white p-2.5 rounded-xl hover:bg-pink-300 transition-all duration-200 shadow-sm relative cursor-pointer"
             >
               <Image
+                priority={true}
                 src="https://res.cloudinary.com/dheamyys5/image/upload/v1769814238/cart_kwv1nl.png"
                 alt="Carrinho de compras"
                 width={28}

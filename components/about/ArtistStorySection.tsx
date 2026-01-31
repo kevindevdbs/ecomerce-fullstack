@@ -9,6 +9,7 @@ export default function ArtistStorySection() {
         <div className="w-full md:w-1/2 flex justify-center md:justify-end">
           <div className="relative w-full max-w-sm md:max-w-md aspect-4/5 rounded-[2.5rem] md:rounded-[3rem] overflow-hidden shadow-xl md:shadow-2xl shadow-purple-200/50 rotate-2 hover:rotate-0 transition-all duration-700 border-[6px] border-white bg-pink-100 mx-auto md:mx-0">
             <Image
+              priority={true}
               src="/rayssa.jpeg" // SUBSTITUA PELA SUA FOTO
               alt="Foto de Rayssa, fundadora da Ray Resina"
               fill

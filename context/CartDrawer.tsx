@@ -74,6 +74,7 @@ export default function CartDrawer() {
                   {/* Imagem */}
                   <div className="relative w-20 h-20 shrink-0 rounded-xl overflow-hidden bg-slate-50 border border-slate-100">
                     <Image
+                      priority={true}
                       src={
                         item.variantImage ||
                         item.product.image ||

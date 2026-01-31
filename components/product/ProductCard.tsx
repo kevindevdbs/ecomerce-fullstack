@@ -38,6 +38,7 @@ export default function ProductCard({ product }: ProductCardProps) {
       <div className="relative aspect-square rounded-3xl overflow-hidden mb-4 bg-slate-50 border border-slate-100/50">
         <Link href={`/produto/${product.id}`}>
           <Image
+            priority={true}
             src={product.image || "/default-image.jpg"}
             alt={product.name}
             fill

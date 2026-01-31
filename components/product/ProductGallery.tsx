@@ -103,6 +103,7 @@ export default function ProductGallery({
           {validImages.map((img, index) => (
             <div key={index} className="min-w-full h-full relative">
               <Image
+                priority={index === 0}
                 src={img}
                 alt={`Imagem ${index + 1} de ${productName}`}
                 fill
@@ -177,6 +178,7 @@ export default function ProductGallery({
                 aria-label={`Ir para imagem ${index + 1}`}
               >
                 <Image
+                  priority={index === 0}
                   src={img}
                   alt={`Miniatura ${index + 1}`}
                   fill

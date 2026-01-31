@@ -60,6 +60,7 @@ export default async function CategoriesPage() {
                     <div className="relative w-16 h-16 rounded-xl overflow-hidden bg-slate-100 border border-slate-200 shrink-0">
                       {cat.image ? (
                         <Image
+                          priority={true}
                           src={cat.image}
                           alt={cat.name}
                           fill
@@ -120,6 +121,7 @@ export default async function CategoriesPage() {
                         <div className="relative w-10 h-10 rounded-lg overflow-hidden bg-slate-100 border border-slate-200">
                           {cat.image ? (
                             <Image
+                              priority={true}
                               src={cat.image}
                               alt={cat.name}
                               fill

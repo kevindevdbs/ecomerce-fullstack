@@ -5,7 +5,9 @@ import ProductDetailsContainer from "@/components/product/ProductDetailsContaine
 import SectionTitle from "@/components/ui/SectionTitle";
 import ProductCard from "@/components/product/ProductCard";
 
-export const dynamic = "force-dynamic";
+
+export const revalidate = 3600; 
+export const dynamicParams = true;
 
 interface ProductPageProps {
   params: Promise<{ id: string }>;

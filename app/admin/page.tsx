@@ -90,6 +90,7 @@ export default async function AdminPage() {
                     <div className="flex gap-4">
                       <div className="relative w-20 h-20 rounded-xl overflow-hidden bg-slate-100 border border-slate-200 shrink-0">
                         <Image
+                          priority={true}
                           src={product.image}
                           alt={product.name}
                           fill
@@ -180,6 +181,7 @@ export default async function AdminPage() {
                         <div className="flex items-center gap-4">
                           <div className="relative w-12 h-12 rounded-lg overflow-hidden bg-slate-100 border border-slate-200 shrink-0">
                             <Image
+                              priority={true}
                               src={product.image}
                               alt={product.name}
                               fill
