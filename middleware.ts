@@ -2,64 +2,29 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
 export function middleware(req: NextRequest) {
-  const pathname = req.nextUrl.pathname;
+  // Verificação simples para testar se o erro 500 some
+  // Se funcionar, o problema era nas variáveis de ambiente
 
-  // 1. Só roda na rota /admin
-  if (pathname.startsWith("/admin")) {
-    // 2. Verifica se as variáveis existem (evita crash se você esqueceu de configurar)
-    const adminUser = process.env.ADMIN_USER;
-    const adminPass = process.env.ADMIN_PASSWORD;
-
-    if (!adminUser || !adminPass) {
-      console.error(
-        "ERRO CRÍTICO: Variáveis de ambiente ADMIN_USER ou ADMIN_PASSWORD não encontradas.",
-      );
-      // Retorna erro amigável em vez de tela branca
-      return new NextResponse(
-        "Erro de Configuração: Admin não configurado no servidor.",
-        { status: 500 },
-      );
-    }
-
-    // 3. Pega o cabeçalho de autenticação
+  if (req.nextUrl.pathname.startsWith("/admin")) {
     const authHeader = req.headers.get("authorization");
 
-    // Se não tiver cabeçalho, pede senha
-    if (!authHeader) {
-      return new NextResponse("Autenticação Necessária", {
-        status: 401,
-        headers: {
-          "WWW-Authenticate": 'Basic realm="Área Restrita"',
-        },
-      });
-    }
-
-    try {
-      // 4. Tenta decodificar a senha (BLINDADO COM TRY/CATCH)
+    if (authHeader) {
+      // Senha fixa para teste: user=admin, senha=admin
+      // Base64 de admin:admin é YWRtaW46YWRtaW4=
       const authValue = authHeader.split(" ")[1];
-      if (!authValue) throw new Error("Token vazio");
-
-      const [user, pwd] = atob(authValue).split(":");
-
-      // 5. Confere usuário e senha
-      if (user === adminUser && pwd === adminPass) {
+      if (authValue === "YWRtaW46YWRtaW4=") {
         return NextResponse.next();
       }
-    } catch (error) {
-      console.error("Erro ao decodificar autenticação:", error);
-      // Se der erro na decodificação, apenas nega o acesso, não derruba o site
     }
 
-    // Se chegou aqui, a senha está errada ou falhou
-    return new NextResponse("Senha Incorreta", {
+    return new NextResponse("Login Necessário (Teste)", {
       status: 401,
       headers: {
-        "WWW-Authenticate": 'Basic realm="Área Restrita"',
+        "WWW-Authenticate": 'Basic realm="Admin Area"',
       },
     });
   }
 
-  // Deixa passar outras rotas
   return NextResponse.next();
 }
 
