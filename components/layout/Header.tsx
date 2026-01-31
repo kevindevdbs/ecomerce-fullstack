@@ -85,7 +85,7 @@ export default function Header() {
                 className="object-cover"
                 fill
                 sizes="48px"
-                priority
+                
               />
             </Link>
 
