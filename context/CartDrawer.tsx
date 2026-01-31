@@ -163,12 +163,12 @@ export default function CartDrawer() {
                 const message = `Olá! Gostaria de finalizar meu pedido.\n\nItens:\n${cartItems
                   .map(
                     (i) =>
-                      `- ${i.quantity}x ${i.product.name} (${i.variantName || "Padrão"})\n  Preço Un: R$ ${getItemPrice(i).toFixed(2)}`,
+                      `- ${i.quantity}x ${i.product.name}\n  Preço Un: R$ ${getItemPrice(i).toFixed(2)}`,
                   )
-                  .join("\n")}\n\nTotal Final: R$ ${cartTotal.toFixed(2)}`;
+                  .join("\n")}\n\nTotal Final: R$ ${cartTotal.toFixed(2)}\n\nAguardo o retorno. Muito obrigado!`;
 
                 window.open(
-                  `https://wa.me/5531999999999?text=${encodeURIComponent(message)}`,
+                  `https://wa.me/5531994773257?text=${encodeURIComponent(message)}`,
                   "_blank",
                 );
               }}

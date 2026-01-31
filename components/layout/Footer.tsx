@@ -100,7 +100,9 @@ export default function Footer() {
               {/* Item Email */}
               <li className="flex items-start gap-3 group">
                 <div className="bg-slate-800/80 p-2 rounded-lg shrink-0 group-hover:bg-pink-500/20 transition-colors border border-slate-700 group-hover:border-pink-500/50 mt-0.5">
-                  <a href="mailto:rayresinaart@gmail.com"><Mail className="w-4 h-4 text-pink-400" /></a>
+                  <a href="mailto:rayresinaart@gmail.com">
+                    <Mail className="w-4 h-4 text-pink-400" />
+                  </a>
                 </div>
                 <div>
                   <p className="text-white font-medium text-xs uppercase tracking-wider">
@@ -118,7 +120,13 @@ export default function Footer() {
               {/* Item WhatsApp */}
               <li className="flex items-start gap-3 group">
                 <div className="bg-slate-800/80 p-2 rounded-lg shrink-0 group-hover:bg-green-500/20 transition-colors border border-slate-700 group-hover:border-green-500/50 mt-0.5">
-                  <a href="https://wa.me/5531994773257" target="_blank" rel="noopener noreferrer"><Phone className="w-4 h-4 text-green-400" /></a>
+                  <a
+                    href="https://wa.me/5531994773257"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    <Phone className="w-4 h-4 text-green-400" />
+                  </a>
                 </div>
                 <div>
                   <p className="text-white font-medium text-xs uppercase tracking-wider">

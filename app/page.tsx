@@ -98,7 +98,6 @@ export default async function Home() {
                   alt="Peça de resina destaque"
                   fill
                   className="object-cover"
-                  
                 />
               </div>
             </div>

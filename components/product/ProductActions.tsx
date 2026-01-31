@@ -61,13 +61,13 @@ export default function ProductActions({
 
       {/* Botão Dúvidas (WhatsApp) */}
       <a
-        href={`https://wa.me/5511999999999?text=Olá, tenho uma dúvida sobre o produto: ${product.name}`}
+        href={`https://wa.me/5531994773257?text=${encodeURIComponent(`Olá! Gostaria de saber mais sobre o produto: ${product.name}. Pode me ajudar?`)}`}
         target="_blank"
         rel="noopener noreferrer"
         className="flex items-center justify-center gap-3 px-8 py-4 border-2 border-green-500 text-green-600 font-bold text-lg rounded-full hover:bg-green-50 transition-colors"
       >
         <FaWhatsapp className="w-5 h-5" />
-        Tenho Dúvidas
+        Falar no WhatsApp
       </a>
     </div>
   );
