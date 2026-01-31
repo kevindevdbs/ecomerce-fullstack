@@ -165,7 +165,9 @@ export default function CartDrawer() {
                     (i) =>
                       `- ${i.quantity}x ${i.product.name}\n  Preço Un: R$ ${getItemPrice(i).toFixed(2)}`,
                   )
-                  .join("\n")}\n\nTotal Final: R$ ${cartTotal.toFixed(2)}\n\nAguardo o retorno. Muito obrigado!`;
+                  .join(
+                    "\n",
+                  )}\n\nTotal Final: R$ ${cartTotal.toFixed(2)}\n\nAguardo o retorno. Muito obrigado!`;
 
                 window.open(
                   `https://wa.me/5531994773257?text=${encodeURIComponent(message)}`,
