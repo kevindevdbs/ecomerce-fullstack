@@ -59,7 +59,6 @@ export default async function Home() {
                         alt="Lírio Ray Resina"
                         fill
                         className="object-contain"
-                        priority
                       />
                     </div>
                   </div>
@@ -99,7 +98,7 @@ export default async function Home() {
                   alt="Peça de resina destaque"
                   fill
                   className="object-cover"
-                  priority
+                  
                 />
               </div>
             </div>
