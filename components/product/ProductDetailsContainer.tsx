@@ -89,6 +89,15 @@ export default function ProductDetailsContainer({
           </span>
         </div>
 
+        {/* --- DESCRIÇÃO CURTA DO PRODUTO --- */}
+        {product.shortDescription && (
+          <div className="mb-2">
+            <p className="text-base text-slate-600 font-medium">
+              {product.shortDescription}
+            </p>
+          </div>
+        )}
+
         {/* Mostra aviso se estiver aplicando preço de atacado */}
         {currentPrice < product.price && (
           <p className="text-green-600 font-bold text-sm bg-green-50 inline-block px-3 py-1 rounded-full animate-pulse">
