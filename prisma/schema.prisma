@@ -1,35 +1,28 @@
+// prisma/schema.prisma
+
 generator client {
   provider = "prisma-client-js"
-  // Não coloque output aqui!
 }
 
 datasource db {
   provider = "postgresql"
 }
 
-
 model Product {
   id                 Int               @id @default(autoincrement())
   name               String
   image              String
+  additionalImages   String[]          
   categoryId         Int
   category           Category          @relation(fields: [categoryId], references: [id])
   price              Float
   shortDescription   String
   fullDescription    String
   details            String[]
+  isVisible          Boolean       @default(true)
   hasLetterSelection Boolean?          @default(false)
-  variants           ProductVariant[]  @relation("ProductVariants")
   wholesaleOptions   WholesaleOption[] @relation("WholesaleOptions")
-}
-
-model ProductVariant {
-  id        String   @id
-  name      String
-  colorHex  String
-  images    String[]
-  productId Int
-  product   Product  @relation("ProductVariants", fields: [productId], references: [id])
+  
 }
 
 model WholesaleOption {
@@ -37,12 +30,13 @@ model WholesaleOption {
   minQuantity Int
   unitPrice   Float
   productId   Int
-  product     Product @relation("WholesaleOptions", fields: [productId], references: [id])
+  product     Product @relation("WholesaleOptions", fields: [productId], references: [id], onDelete: Cascade)
 }
 
 model Category {
   id       Int       @id @default(autoincrement())
   name     String    @unique
   image    String?
+  isVisible Boolean  @default(true)
   products Product[]
 }

@@ -12,36 +12,24 @@ interface EditPageProps {
 
 export default async function EditProductPage(props: EditPageProps) {
   const params = await props.params;
-
-  // LOG PARA DESCOBRIR O PROBLEMA (Olhe no terminal do VS Code)
-  console.log("--- TENTANDO EDITAR ---");
-  console.log("ID recebido na URL:", params.id);
-
   const productId = parseInt(params.id);
 
-  // Se o ID não for número, avisa no log
   if (isNaN(productId)) {
-    console.error("ERRO: O ID na URL não é um número válido.");
     notFound();
   }
 
-  console.log("ID convertido para número:", productId);
-
-  // Busca o produto
+  // Busca o produto (Variants removido do include)
   const product = await prisma.product.findUnique({
     where: { id: productId },
     include: {
-      variants: true,
       wholesaleOptions: true,
+      // Variants não existe mais
     },
   });
 
   if (!product) {
-    console.error("ERRO: Produto não encontrado no banco com esse ID.");
     notFound();
   }
-
-  console.log("Produto encontrado:", product.name);
 
   // Busca categorias
   const categories = await prisma.category.findMany();

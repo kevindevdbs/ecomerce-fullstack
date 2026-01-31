@@ -1,7 +1,14 @@
 import prisma from "@/lib/prisma";
 import Link from "next/link";
 import Image from "next/image";
-import { Plus, Package, Pencil, Eye, LayoutGrid } from "lucide-react";
+import {
+  Plus,
+  Package,
+  Pencil,
+  Eye,
+  LayoutGrid,
+  Image as ImageIcon,
+} from "lucide-react";
 import DeleteProductButton from "@/components/admin/DeleteProductButton";
 
 export const dynamic = "force-dynamic";
@@ -11,7 +18,7 @@ export default async function AdminPage() {
     orderBy: { id: "desc" },
     include: {
       category: true,
-      variants: true,
+      // variants: true -> REMOVIDO
     },
   });
 
@@ -99,7 +106,7 @@ export default async function AdminPage() {
                       </div>
                     </div>
 
-                    {/* Linha 2: Preço e Variantes */}
+                    {/* Linha 2: Preço e Galeria */}
                     <div className="flex justify-between items-center border-t border-b border-slate-50 py-3">
                       <div>
                         <span className="text-xs text-slate-400 block">
@@ -112,16 +119,18 @@ export default async function AdminPage() {
                           })}
                         </span>
                       </div>
-                      {product.variants.length > 0 && (
-                        <div className="text-right">
-                          <span className="text-xs text-slate-400 block">
-                            Opções
-                          </span>
-                          <span className="text-sm font-medium text-slate-600">
-                            {product.variants.length} cores
-                          </span>
-                        </div>
-                      )}
+                      {product.additionalImages &&
+                        product.additionalImages.length > 0 && (
+                          <div className="text-right">
+                            <span className="text-xs text-slate-400 block">
+                              Galeria
+                            </span>
+                            <span className="text-sm font-medium text-slate-600 flex items-center gap-1">
+                              <ImageIcon size={14} />{" "}
+                              {product.additionalImages.length} fotos
+                            </span>
+                          </div>
+                        )}
                     </div>
 
                     {/* Linha 3: Ações (Botões Grandes) */}
@@ -181,11 +190,13 @@ export default async function AdminPage() {
                             <p className="font-bold text-slate-800 line-clamp-1 max-w-[200px]">
                               {product.name}
                             </p>
-                            {product.variants.length > 0 && (
-                              <span className="text-xs text-slate-400">
-                                {product.variants.length} variações
-                              </span>
-                            )}
+                            {product.additionalImages &&
+                              product.additionalImages.length > 0 && (
+                                <span className="text-xs text-slate-400 flex items-center gap-1 mt-1">
+                                  <ImageIcon size={12} />{" "}
+                                  {product.additionalImages.length} fotos extras
+                                </span>
+                              )}
                           </div>
                         </div>
                       </td>

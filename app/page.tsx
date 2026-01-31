@@ -6,48 +6,22 @@ import GradientText from "../components/ui/GradientText";
 import SectionTitle from "../components/ui/SectionTitle";
 import ProductCard from "../components/product/ProductCard";
 
-// Tipagem básica para a página
-interface Product {
-  id: number;
-  name: string;
-  image: string;
-  categoryId: number;
-  price: number;
-  shortDescription: string;
-  fullDescription: string;
-  details: string[];
-  hasLetterSelection: boolean | null;
-  variants: { id: number; name: string }[] | null;
-}
-
-interface Category {
-  id: number;
-  name: string;
-  image: string;
-}
-
 export default async function Home() {
-  // Buscando produtos
+  // Buscando produtos visíveis
   const productsRaw = await prisma.product.findMany({
-    include: {
-      variants: true,
-    },
-    take: 8, // Limita para não carregar produtos demais na home
+    where: { isVisible: true }, // <--- FILTRO
+    take: 8,
   });
 
-  // Tratando dados para garantir formato correto
   const products = productsRaw.map((product) => ({
     ...product,
     image: product.image || "",
-    variants:
-      product.variants?.map((variant) => ({
-        ...variant,
-        id: Number(variant.id),
-      })) || null,
   }));
 
-  // Buscando categorias
-  const categoriesRaw = await prisma.category.findMany();
+  // Buscando categorias visíveis
+  const categoriesRaw = await prisma.category.findMany({
+    where: { isVisible: true }, // <--- FILTRO
+  });
   const categories = categoriesRaw.map((category) => ({
     ...category,
     image: category.image || "",
@@ -149,21 +123,18 @@ export default async function Home() {
             </Link>
           </div>
 
-          {/* Grid de Produtos */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6 md:gap-8">
             {products.map((product) => {
-              // Encontra o nome da categoria baseado no ID
               const categoryName =
                 categories.find((cat) => cat.id === product.categoryId)?.name ||
                 "Sem Categoria";
 
-              // Passamos o produto no formato NOVO que o componente espera
               return (
                 <ProductCard
                   key={product.id}
                   product={{
                     ...product,
-                    category: categoryName, // Passamos a string da categoria aqui dentro
+                    category: categoryName,
                   }}
                 />
               );

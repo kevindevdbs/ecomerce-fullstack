@@ -8,19 +8,21 @@ import { redirect } from "next/navigation";
 export async function createCategory(formData: FormData) {
   const name = formData.get("name") as string;
   const image = formData.get("image") as string;
+  // O checkbox retorna "on" se marcado, ou null se desmarcado
+  const isVisible = formData.get("isVisible") === "on";
 
   try {
     await prisma.category.create({
       data: {
         name,
         image: image || null,
+        isVisible, // Salva no banco
       },
     });
 
-    // ATUALIZA TODAS AS PÁGINAS QUE MOSTRAM CATEGORIAS
     revalidatePath("/admin/categorias");
     revalidatePath("/catalogo");
-    revalidatePath("/"); // <--- ESSA LINHA FALTAVA (Atualiza a Home)
+    revalidatePath("/");
   } catch (error) {
     return { error: "Erro ao criar categoria." };
   }
@@ -32,6 +34,7 @@ export async function createCategory(formData: FormData) {
 export async function updateCategory(id: number, formData: FormData) {
   const name = formData.get("name") as string;
   const image = formData.get("image") as string;
+  const isVisible = formData.get("isVisible") === "on";
 
   try {
     await prisma.category.update({
@@ -39,12 +42,13 @@ export async function updateCategory(id: number, formData: FormData) {
       data: {
         name,
         image: image || null,
+        isVisible,
       },
     });
 
     revalidatePath("/admin/categorias");
     revalidatePath("/catalogo");
-    revalidatePath("/"); // <--- ESSA LINHA FALTAVA
+    revalidatePath("/");
   } catch (error) {
     return { error: "Erro ao atualizar categoria." };
   }
@@ -70,7 +74,6 @@ export async function deleteCategory(id: number) {
       where: { id },
     });
 
-    // ATUALIZA AS PÁGINAS
     revalidatePath("/admin/categorias");
     revalidatePath("/catalogo");
     revalidatePath("/");

@@ -23,44 +23,37 @@ export default async function ProductPage({ params }: ProductPageProps) {
     where: { id: productId },
     include: {
       category: true,
-      variants: true,
       wholesaleOptions: {
         orderBy: { minQuantity: "asc" },
       },
     },
   });
 
-  if (!product) {
+  // VERIFICAÇÃO DE VISIBILIDADE
+  // Se não existir OU se não estiver visível -> 404
+  if (!product || !product.isVisible) {
     return notFound();
   }
 
-  // --- IMAGENS ---
-  const allImages = [product.image];
-  if (product.variants.length > 0) {
-    product.variants.forEach((variant) => {
-      if (variant.images && variant.images.length > 0) {
-        allImages.push(...variant.images);
-      }
-    });
-  }
+  const allImages = [product.image, ...(product.additionalImages || [])];
+
   const uniqueImages = Array.from(new Set(allImages)).filter(
     (img) => img && img !== "",
   );
 
-  // --- PRODUTOS RELACIONADOS ---
   const relatedProducts = await prisma.product.findMany({
     where: {
       categoryId: product.categoryId,
       id: { not: product.id },
+      isVisible: true, // <--- Produtos relacionados também só se forem visíveis
     },
     take: 4,
-    include: { category: true, variants: true },
+    include: { category: true },
   });
 
   return (
     <div className="min-h-screen bg-slate-50 pt-28 pb-20">
       <div className="container mx-auto px-4 max-w-6xl">
-        {/* Bloco Principal (Galeria e Info Lateral) */}
         <div className="bg-white rounded-3xl shadow-sm border border-slate-100 p-6 md:p-10 mb-12">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-10 md:gap-16">
             <div className="w-full">
@@ -75,18 +68,15 @@ export default async function ProductPage({ params }: ProductPageProps) {
           </div>
         </div>
 
-        {/* --- DESCRIÇÃO E DETALHES --- */}
         <div className="bg-white rounded-3xl shadow-sm border border-slate-100 p-8 md:p-12 mb-16">
           <h2 className="text-2xl font-bold text-slate-800 mb-6 flex items-center gap-3">
             <span className="w-1 h-8 bg-pink-600 rounded-full block"></span>
             Descrição do Produto
           </h2>
-
           <div className="text-slate-600 leading-relaxed whitespace-pre-line text-lg">
             {product.fullDescription}
           </div>
 
-          {/* ADICIONADO: Seção de Detalhes abaixo da descrição */}
           {product.details && product.details.length > 0 && (
             <div className="mt-8 pt-8 border-t border-slate-100">
               <h3 className="text-xl font-bold text-slate-800 mb-4">
@@ -107,7 +97,6 @@ export default async function ProductPage({ params }: ProductPageProps) {
           )}
         </div>
 
-        {/* Produtos Relacionados */}
         {relatedProducts.length > 0 && (
           <div className="mt-20">
             <SectionTitle

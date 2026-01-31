@@ -17,8 +17,7 @@ interface Product {
   fullDescription?: string;
   categoryId: string | number;
   price: number;
-  variants?: Array<any>;
-  // Adicione outros campos conforme necessário
+  // Variants removido
 }
 
 interface Category {
@@ -151,16 +150,7 @@ export default function CatalogPage({
         />
 
         <ProductGrid
-          filteredProducts={filteredProducts.map((product) => ({
-            ...product,
-            variants: (product.variants ?? []).map((variant: any) => ({
-              ...variant,
-              id:
-                typeof variant.id === "string"
-                  ? Number(variant.id)
-                  : variant.id,
-            })),
-          }))}
+          filteredProducts={filteredProducts} // Passamos direto, sem tentar mapear variants
           clearFilters={clearFilters}
           category={
             categories.find((cat) => selectedCategories.includes(cat.name))

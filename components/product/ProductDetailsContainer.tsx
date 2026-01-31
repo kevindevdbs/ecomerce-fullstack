@@ -2,8 +2,7 @@
 
 import { useState, useMemo } from "react";
 import ProductActions from "./ProductActions";
-import VariantSelector from "./VariantSelector";
-import QuantitySelector from "./QuantitySelector";
+import QuantitySelector from "./QuantitySelector"; // Seletor que já arrumamos
 
 interface ProductWithRelations {
   id: number;
@@ -12,23 +11,14 @@ interface ProductWithRelations {
   price: number;
   shortDescription: string;
   fullDescription: string;
+  additionalImages: string[]; // Novo campo
   hasLetterSelection: boolean | null;
-  variants: {
-    id: string;
-    name: string;
-    colorHex: string;
-    images: string[];
-    productId: number;
-  }[];
   wholesaleOptions: {
     id: number;
     minQuantity: number;
     unitPrice: number;
-    productId: number;
   }[];
-  category: {
-    name: string;
-  } | null;
+  category: { name: string } | null;
 }
 
 interface ProductDetailsContainerProps {
@@ -42,63 +32,41 @@ const ALPHABET = Array.from({ length: 26 }, (_, i) =>
 export default function ProductDetailsContainer({
   product,
 }: ProductDetailsContainerProps) {
-  const initialVariantId =
-    product.variants && product.variants.length > 0
-      ? product.variants[0].id
-      : "";
-
-  const [selectedVariantId, setSelectedVariantId] = useState(initialVariantId);
   const [quantity, setQuantity] = useState(1);
   const [selectedLetter, setSelectedLetter] = useState<string>("");
 
-  // --- LÓGICA DE PREÇO DINÂMICO ---
+  // Preço Dinâmico (Atacado)
   const currentPrice = useMemo(() => {
     if (!product.wholesaleOptions || product.wholesaleOptions.length === 0) {
       return product.price;
     }
-
-    // Ordena as opções de atacado da maior quantidade para a menor
     const options = [...product.wholesaleOptions].sort(
       (a, b) => b.minQuantity - a.minQuantity,
     );
-
-    // Encontra a primeira opção que satisfaz a quantidade atual
     const activeOption = options.find((opt) => quantity >= opt.minQuantity);
-
     return activeOption ? activeOption.unitPrice : product.price;
   }, [product.price, product.wholesaleOptions, quantity]);
 
-  // Validação
   const isLetterSelectionValid =
     !product.hasLetterSelection ||
     (product.hasLetterSelection && selectedLetter !== "");
-  const selectedVariant = product.variants?.find(
-    (v) => v.id === selectedVariantId,
-  );
 
   return (
     <div className="flex flex-col gap-6 mt-6">
-      {/* --- EXIBIÇÃO DO PREÇO --- */}
       <div className="pb-6 border-b border-slate-100">
         <div className="flex items-end gap-3 mb-2">
-          <p className="text-4xl lg:text-5xl font-extrabold text-transparent bg-clip-text bg-linear-to-r from-pink-500 to-purple-600 transition-all duration-300">
+          <p className="text-4xl lg:text-5xl font-extrabold text-transparent bg-clip-text bg-linear-to-r from-pink-500 to-purple-600">
             R$ {currentPrice.toFixed(2).replace(".", ",")}
           </p>
           <span className="text-slate-400 font-medium mb-1 text-lg">
             unidade
           </span>
         </div>
-
-        {/* --- DESCRIÇÃO CURTA DO PRODUTO --- */}
         {product.shortDescription && (
-          <div className="mb-2">
-            <p className="text-base text-slate-600 font-medium">
-              {product.shortDescription}
-            </p>
-          </div>
+          <p className="text-base text-slate-600 font-medium mb-2">
+            {product.shortDescription}
+          </p>
         )}
-
-        {/* Mostra aviso se estiver aplicando preço de atacado */}
         {currentPrice < product.price && (
           <p className="text-green-600 font-bold text-sm bg-green-50 inline-block px-3 py-1 rounded-full animate-pulse">
             Opa! Preço de atacado aplicado 🎉
@@ -107,63 +75,37 @@ export default function ProductDetailsContainer({
       </div>
 
       <div className="flex flex-col gap-8 items-start">
-        {/* SELETOR DE VARIAÇÃO */}
-        <div className="flex-1 w-full">
-          {product.variants &&
-            product.variants.length > 1 &&
-            selectedVariant && (
-              <p className="text-sm text-slate-500 mb-2">
-                Variação selecionada:{" "}
-                <strong className="text-slate-700">
-                  {selectedVariant.name}
-                </strong>
-              </p>
-            )}
-          {product.variants && (
-            <VariantSelector
-              variants={product.variants}
-              selectedId={selectedVariantId}
-              onSelect={setSelectedVariantId}
-            />
-          )}
-        </div>
-
-        {/* SELETOR DE QUANTIDADE - AGORA COM ONCHANGE */}
-        <div>
-          <QuantitySelector
-            quantity={quantity}
-            onIncrease={() => setQuantity((q) => q + 1)}
-            onDecrease={() => setQuantity((q) => Math.max(1, q - 1))}
-            onChange={(val) => setQuantity(val)}
-          />
-        </div>
+        {/* SELETOR DE QUANTIDADE */}
+        <QuantitySelector
+          quantity={quantity}
+          onIncrease={() => setQuantity((q) => q + 1)}
+          onDecrease={() => setQuantity((q) => Math.max(1, q - 1))}
+          onChange={(val) => setQuantity(val)}
+        />
       </div>
 
-      {/* SELETOR DE LETRAS */}
       {product.hasLetterSelection && (
         <div className="border-t border-slate-100 pt-6 w-full">
-          <h3 className="text-sm font-bold text-slate-800 mb-3 uppercase tracking-wider flex items-center gap-2">
-            Personalização: Escolha a Letra{" "}
+          <h3 className="text-sm font-bold text-slate-800 mb-3 uppercase flex items-center gap-2">
+            Personalização: Escolha a Letra
             <span className="text-pink-500 text-xs normal-case bg-pink-50 px-2 py-0.5 rounded-full">
               Obrigatório
             </span>
           </h3>
-          <div className="relative">
-            <select
-              value={selectedLetter}
-              onChange={(e) => setSelectedLetter(e.target.value)}
-              className="appearance-none w-full md:w-64 p-4 pl-5 pr-10 border-2 border-slate-200 rounded-2xl bg-white text-slate-700 font-bold focus:border-pink-500 focus:ring-4 focus:ring-pink-500/20 outline-none transition-all cursor-pointer"
-            >
-              <option value="" disabled>
-                Selecione uma opção...
+          <select
+            value={selectedLetter}
+            onChange={(e) => setSelectedLetter(e.target.value)}
+            className="w-full md:w-64 p-4 border-2 border-slate-200 rounded-2xl bg-white font-bold cursor-pointer outline-none focus:border-pink-500"
+          >
+            <option value="" disabled>
+              Selecione...
+            </option>
+            {ALPHABET.map((l) => (
+              <option key={l} value={l}>
+                Letra {l}
               </option>
-              {ALPHABET.map((letter) => (
-                <option key={letter} value={letter}>
-                  Letra {letter}
-                </option>
-              ))}
-            </select>
-          </div>
+            ))}
+          </select>
           {selectedLetter === "" && (
             <p className="text-pink-600 text-sm font-medium mt-3 animate-pulse">
               Por favor, selecione a letra para continuar.
@@ -172,7 +114,6 @@ export default function ProductDetailsContainer({
         </div>
       )}
 
-      {/* AVISO DE ATACADO (Lista de regras) */}
       {product.wholesaleOptions && product.wholesaleOptions.length > 0 && (
         <div className="bg-blue-50 text-blue-800 p-4 rounded-2xl text-sm border border-blue-100 flex flex-col gap-2">
           <strong className="flex items-center gap-2 text-blue-700">
@@ -200,7 +141,7 @@ export default function ProductDetailsContainer({
 
       <ProductActions
         product={product}
-        selectedVariantId={selectedVariantId}
+        selectedVariantId="" // Não existe mais variante
         quantity={quantity}
         selectedLetter={selectedLetter}
         isDisabled={!isLetterSelectionValid}
