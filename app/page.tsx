@@ -45,9 +45,10 @@ export default async function Home() {
   ]);
 
   // Normalizando dados para os componentes
-  // O tipo inferido aqui deve ser compatível com Product do @/types
-  // Como prisma retorna null para relations opcionais e nosso type espera, estamos ok.
-  const products = productsRaw;
+  const products = productsRaw.map((product) => ({
+    ...product,
+    image: product.image || "",
+  }));
 
   // Normalizando categorias
   const categories = categoriesRaw.map((category) => ({

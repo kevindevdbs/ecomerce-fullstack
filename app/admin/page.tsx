@@ -197,7 +197,7 @@ export default async function AdminPage() {
                             />
                           </div>
                           <div>
-                            <p className="font-bold text-slate-800 line-clamp-1 max-w-[200px]">
+                            <p className="font-bold text-slate-800 line-clamp-1 max-w-50">
                               {product.name}
                             </p>
                             {product.additionalImages &&

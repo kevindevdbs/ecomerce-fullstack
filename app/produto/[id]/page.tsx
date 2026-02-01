@@ -37,28 +37,43 @@ export default async function ProductPage({ params }: ProductPageProps) {
   }
 
   // 2. Busca produtos relacionados (dependente do produto principal)
-  const relatedProducts = await prisma.product.findMany({
+  const relatedProductsRaw = await prisma.product.findMany({
     where: {
       categoryId: product.categoryId,
       id: { not: product.id },
       isVisible: true,
     },
     take: 4,
-    // Busca otimizada: Apenas campos necessários para o Card
+    // Precisamos buscar todos os campos para satisfazer a interface Product
     select: {
       id: true,
       name: true,
       price: true,
       image: true,
+      additionalImages: true,
       shortDescription: true,
+      fullDescription: true,
+      details: true,
+      isVisible: true,
+      hasLetterSelection: true,
+      wholesaleOptions: true,
+      categoryId: true,
       category: {
-        select: { name: true },
+        select: {
+          id: true,
+          name: true,
+          image: true,
+          isVisible: true,
+        },
       },
-      // categoryId é incluído implicitamente pelo select do pai se precisar,
-      // mas para o Card 'category' object é suficiente
     },
   });
 
+  // Normalização para garantir compatibilidade com o tipo Product
+  const relatedProducts = relatedProductsRaw.map((p) => ({
+    ...p,
+    image: p.image || "", // Garante string não nula
+  }));
   // Normalização de Imagens
   const allImages = [product.image, ...(product.additionalImages || [])];
   const uniqueImages = Array.from(new Set(allImages)).filter(
