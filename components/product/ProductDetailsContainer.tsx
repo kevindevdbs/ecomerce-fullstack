@@ -2,27 +2,11 @@
 
 import { useState, useMemo } from "react";
 import ProductActions from "./ProductActions";
-import QuantitySelector from "./QuantitySelector"; // Seletor que já arrumamos
-
-interface ProductWithRelations {
-  id: number;
-  name: string;
-  image: string;
-  price: number;
-  shortDescription: string;
-  fullDescription: string;
-  additionalImages: string[]; // Novo campo
-  hasLetterSelection: boolean | null;
-  wholesaleOptions: {
-    id: number;
-    minQuantity: number;
-    unitPrice: number;
-  }[];
-  category: { name: string } | null;
-}
+import QuantitySelector from "./QuantitySelector";
+import { Product } from "@/types";
 
 interface ProductDetailsContainerProps {
-  product: ProductWithRelations;
+  product: Product;
 }
 
 const ALPHABET = Array.from({ length: 26 }, (_, i) =>
@@ -35,17 +19,27 @@ export default function ProductDetailsContainer({
   const [quantity, setQuantity] = useState(1);
   const [selectedLetter, setSelectedLetter] = useState<string>("");
 
-  // Preço Dinâmico (Atacado)
+  // Memoização do preço (Client-side)
   const currentPrice = useMemo(() => {
-    if (!product.wholesaleOptions || product.wholesaleOptions.length === 0) {
+    if (!product.wholesaleOptions?.length) {
       return product.price;
     }
-    const options = [...product.wholesaleOptions].sort(
+    // Encontrar melhor preço para a quantidade atual
+    const sortedOptions = [...product.wholesaleOptions].sort(
       (a, b) => b.minQuantity - a.minQuantity,
     );
-    const activeOption = options.find((opt) => quantity >= opt.minQuantity);
-    return activeOption ? activeOption.unitPrice : product.price;
+    const validOption = sortedOptions.find(
+      (opt) => quantity >= opt.minQuantity,
+    );
+
+    return validOption ? validOption.unitPrice : product.price;
   }, [product.price, product.wholesaleOptions, quantity]);
+
+  // Formatação segura
+  const formattedPrice = new Intl.NumberFormat("pt-BR", {
+    style: "currency",
+    currency: "BRL",
+  }).format(currentPrice);
 
   const isLetterSelectionValid =
     !product.hasLetterSelection ||
@@ -54,9 +48,12 @@ export default function ProductDetailsContainer({
   return (
     <div className="flex flex-col gap-6 mt-6">
       <div className="pb-6 border-b border-slate-100">
+        <h1 className="text-3xl md:text-4xl font-extrabold text-slate-800 mb-2">
+          {product.name}
+        </h1>
         <div className="flex items-end gap-3 mb-2">
           <p className="text-4xl lg:text-5xl font-extrabold text-transparent bg-clip-text bg-linear-to-r from-pink-500 to-purple-600">
-            R$ {currentPrice.toFixed(2).replace(".", ",")}
+            {formattedPrice}
           </p>
           <span className="text-slate-400 font-medium mb-1 text-lg">
             unidade
@@ -75,7 +72,6 @@ export default function ProductDetailsContainer({
       </div>
 
       <div className="flex flex-col gap-8 items-start">
-        {/* SELETOR DE QUANTIDADE */}
         <QuantitySelector
           quantity={quantity}
           onIncrease={() => setQuantity((q) => q + 1)}
@@ -95,7 +91,8 @@ export default function ProductDetailsContainer({
           <select
             value={selectedLetter}
             onChange={(e) => setSelectedLetter(e.target.value)}
-            className="w-full md:w-64 p-4 border-2 border-slate-200 rounded-2xl bg-white font-bold cursor-pointer outline-none focus:border-pink-500"
+            className="w-full md:w-64 p-4 border-2 border-slate-200 rounded-2xl bg-white font-bold cursor-pointer outline-none focus:border-pink-500 transition-colors"
+            aria-label="Selecione a letra para personalização"
           >
             <option value="" disabled>
               Selecione...
@@ -114,8 +111,8 @@ export default function ProductDetailsContainer({
         </div>
       )}
 
-      {product.wholesaleOptions && product.wholesaleOptions.length > 0 && (
-        <div className="bg-blue-50 text-blue-800 p-4 rounded-2xl text-sm border border-blue-100 flex flex-col gap-2">
+      {product.wholesaleOptions?.length > 0 && (
+        <div className="bg-blue-50 text-blue-800 p-4 rounded-2xl text-sm border border-blue-100 flex flex-col gap-2 w-full">
           <strong className="flex items-center gap-2 text-blue-700">
             📢 Descontos Progressivos:
           </strong>
@@ -131,7 +128,10 @@ export default function ProductDetailsContainer({
                     Acima de <strong>{opt.minQuantity} un.</strong>
                   </span>
                   <span className="font-bold text-blue-700">
-                    R$ {opt.unitPrice.toFixed(2).replace(".", ",")}
+                    {new Intl.NumberFormat("pt-BR", {
+                      style: "currency",
+                      currency: "BRL",
+                    }).format(opt.unitPrice)}
                   </span>
                 </li>
               ))}
@@ -141,7 +141,6 @@ export default function ProductDetailsContainer({
 
       <ProductActions
         product={product}
-        selectedVariantId="" // Não existe mais variante
         quantity={quantity}
         selectedLetter={selectedLetter}
         isDisabled={!isLetterSelectionValid}

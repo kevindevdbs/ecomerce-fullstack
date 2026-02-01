@@ -1,36 +1,64 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# E-commerce Fullstack - Ateliê
 
-## Getting Started
+Este projeto é uma plataforma de e-commerce moderna e completa, desenvolvida para gerenciar vendas de produtos personalizados e em atacado. O sistema inclui um painel administrativo robusto, catálogo interativo e integração direta com WhatsApp para finalização de pedidos.
 
-First, run the development server:
+## 🚀 Tecnologias e Stack
+
+- **Framework**: [Next.js 15](https://nextjs.org/) (App Router & Server Actions)
+- **Linguagem**: TypeScript (Estrita tipagem para Senior dev experience)
+- **Banco de Dados**: PostgreSQL (via SQLite em dev)
+- **ORM**: [Prisma](https://www.prisma.io/)
+- **Estilização**: Tailwind CSS + Lucide Icons
+- **Gerenciamento de Estado**: React Data Context (CartContext)
+
+## ✨ Funcionalidades Principais
+
+### Cliente (Loja Pública)
+
+- **Catálogo Dinâmico**: Filtragem em tempo real (Fuse.js) por nome, categoria e faixa de preço.
+- **Sistema de Atacado**: Preços ajustáveis automaticamente com base na quantidade selecionada (Tabela de preços progressiva).
+- **Personalização**: Suporte para seleção de letras/variantes em produtos específicos.
+- **Carrinho Inteligente**: Persistência de estado e cálculo automático de descontos.
+- **Checkout via WhatsApp**: Geração automática de pedido formatado para envio direto.
+
+### Painel Administrativo (/admin)
+
+- **Dashboard CRUD**: Gestão completa de Produtos e Categorias.
+- **Upload de Imagens**: Suporte para galeria de imagens adicionais por produto.
+- **Gestão de Visibilidade**: Controle de exibição de itens sem necessidade de exclusão.
+- **Configuração de Atacado**: Definição flexível de faixas de desconto por produto.
+
+## 🛠️ Arquitetura e Padrões
+
+O projeto segue padrões de engenharia de software de nível Senior:
+
+- **Zero `any` Policy**: Todo o código é estritamente tipado usando interfaces globais em `@/types`.
+- **Server Actions**: Mutação de dados segura e otimizada sem API Routes desnecessárias.
+- **Atomic Design Adaptado**: Componentes organizados por domínio (`/components/product`, `/components/admin`, etc).
+
+## 📦 Como Rodar Localmente
+
+1. **Instale as dependências:**
+
+```bash
+npm install
+```
+
+2. **Configure o Banco de Dados:**
+
+```bash
+npx prisma generate
+npx prisma migrate dev
+```
+
+3. **Inicie o Servidor:**
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+O projeto estará rodando em [http://localhost:3000](http://localhost:3000).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+---
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
-
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+**Desenvolvido com foco em performance, escalabilidade e DX (Developer Experience).**

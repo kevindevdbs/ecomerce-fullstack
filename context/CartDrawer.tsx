@@ -75,11 +75,7 @@ export default function CartDrawer() {
                   <div className="relative w-20 h-20 shrink-0 rounded-xl overflow-hidden bg-slate-50 border border-slate-100">
                     <Image
                       priority={true}
-                      src={
-                        item.variantImage ||
-                        item.product.image ||
-                        "/default.jpg"
-                      }
+                      src={item.product.image || "/default.jpg"}
                       alt={item.product.name}
                       fill
                       className="object-cover"
@@ -92,9 +88,9 @@ export default function CartDrawer() {
                       <h3 className="text-sm font-bold text-slate-800 line-clamp-1">
                         {item.product.name}
                       </h3>
-                      {item.variantName && (
-                        <p className="text-xs text-slate-500 mt-0.5">
-                          Variação: {item.variantName}
+                      {item.selectedLetter && (
+                        <p className="text-xs text-pink-600 font-bold mt-0.5 bg-pink-50 inline-block px-1.5 py-0.5 rounded-md">
+                          Letra: {item.selectedLetter}
                         </p>
                       )}
                     </div>

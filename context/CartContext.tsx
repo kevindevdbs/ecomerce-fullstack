@@ -7,29 +7,15 @@ import {
   useEffect,
   ReactNode,
 } from "react";
+import { Product, WholesaleOption } from "@/types";
 
-// Definição dos tipos
-interface WholesaleOption {
-  minQuantity: number;
-  unitPrice: number;
-}
-
-export interface CartProduct {
-  id: number;
-  name: string;
-  price: number;
-  image: string;
-  wholesaleOptions?: WholesaleOption[]; // Adicionado aqui
-  [key: string]: any;
-}
+// --- INTERFACES ---
 
 export interface CartItem {
-  cartId: string;
-  product: CartProduct;
-  variantId: string;
-  variantName?: string;
-  variantImage?: string;
+  cartId: string; // ID único (ex: "123-LetraA")
+  product: Product;
   quantity: number;
+  selectedLetter?: string; // Substitui variants para personalização simples
 }
 
 interface CartContextType {
@@ -38,9 +24,9 @@ interface CartContextType {
   cartCount: number;
   cartTotal: number;
   addItemToCart: (
-    product: CartProduct,
+    product: Product,
     quantity: number,
-    variantId?: string,
+    selectedLetter?: string,
   ) => void;
   removeFromCart: (cartId: string) => void;
   updateQuantity: (cartId: string, delta: number) => void;
@@ -48,7 +34,6 @@ interface CartContextType {
   openCart: () => void;
   closeCart: () => void;
   toggleCart: () => void;
-  // Helper para pegar o preço unitário atual de um item
   getItemPrice: (item: CartItem) => number;
 }
 
@@ -99,23 +84,13 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const addItemToCart = (
     product: CartProduct,
     quantity: number,
-    variantId: string = "",
+    selectedLetter?: string,
   ) => {
-    let variantName = "";
-    let variantImage = "";
-
-    if (variantId && product.variants) {
-      const variant = product.variants.find((v: any) => v.id === variantId);
-      if (variant) {
-        variantName = variant.name;
-        variantImage =
-          variant.images && variant.images.length > 0
-            ? variant.images[0]
-            : product.image;
-      }
-    }
-
-    const uniqueId = `${product.id}-${variantId}`;
+    // Cria um ID único para o item no carrinho
+    // Se tiver letra selecionada, ela faz parte da unicidade
+    const uniqueId = selectedLetter
+      ? `${product.id}-${selectedLetter}`
+      : `${product.id}`;
 
     setCartItems((prev) => {
       const existingItem = prev.find((item) => item.cartId === uniqueId);
@@ -133,10 +108,8 @@ export function CartProvider({ children }: { children: ReactNode }) {
         {
           cartId: uniqueId,
           product,
-          variantId,
-          variantName,
-          variantImage: variantImage || product.image,
           quantity,
+          selectedLetter,
         },
       ];
     });
@@ -167,7 +140,6 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
   const cartCount = cartItems.reduce((acc, item) => acc + item.quantity, 0);
 
-  // Cálculo TOTAL agora usa a função inteligente de preço
   const cartTotal = cartItems.reduce(
     (acc, item) => acc + getItemPrice(item) * item.quantity,
     0,
@@ -187,7 +159,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
         openCart,
         closeCart,
         toggleCart,
-        getItemPrice, // Exportamos caso precise usar na UI
+        getItemPrice,
       }}
     >
       {children}

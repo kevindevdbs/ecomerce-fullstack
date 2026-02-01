@@ -2,11 +2,11 @@ import prisma from "@/lib/prisma";
 import { notFound } from "next/navigation";
 import ProductGallery from "@/components/product/ProductGallery";
 import ProductDetailsContainer from "@/components/product/ProductDetailsContainer";
+import ProductInfo from "@/components/product/ProductInfo";
 import SectionTitle from "@/components/ui/SectionTitle";
 import ProductCard from "@/components/product/ProductCard";
 
-
-export const revalidate = 3600; 
+export const revalidate = 3600;
 export const dynamicParams = true;
 
 interface ProductPageProps {
@@ -21,6 +21,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
     return notFound();
   }
 
+  // 1. Busca os dados do produto principal
   const product = await prisma.product.findUnique({
     where: { id: productId },
     include: {
@@ -31,27 +32,38 @@ export default async function ProductPage({ params }: ProductPageProps) {
     },
   });
 
-  // VERIFICAÇÃO DE VISIBILIDADE
-  // Se não existir OU se não estiver visível -> 404
   if (!product || !product.isVisible) {
     return notFound();
   }
 
-  const allImages = [product.image, ...(product.additionalImages || [])];
-
-  const uniqueImages = Array.from(new Set(allImages)).filter(
-    (img) => img && img !== "",
-  );
-
+  // 2. Busca produtos relacionados (dependente do produto principal)
   const relatedProducts = await prisma.product.findMany({
     where: {
       categoryId: product.categoryId,
       id: { not: product.id },
-      isVisible: true, // <--- Produtos relacionados também só se forem visíveis
+      isVisible: true,
     },
     take: 4,
-    include: { category: true },
+    // Busca otimizada: Apenas campos necessários para o Card
+    select: {
+      id: true,
+      name: true,
+      price: true,
+      image: true,
+      shortDescription: true,
+      category: {
+        select: { name: true },
+      },
+      // categoryId é incluído implicitamente pelo select do pai se precisar,
+      // mas para o Card 'category' object é suficiente
+    },
   });
+
+  // Normalização de Imagens
+  const allImages = [product.image, ...(product.additionalImages || [])];
+  const uniqueImages = Array.from(new Set(allImages)).filter(
+    (img): img is string => !!img && img !== "",
+  );
 
   return (
     <div className="min-h-screen bg-slate-50 pt-28 pb-20">
@@ -70,34 +82,11 @@ export default async function ProductPage({ params }: ProductPageProps) {
           </div>
         </div>
 
-        <div className="bg-white rounded-3xl shadow-sm border border-slate-100 p-8 md:p-12 mb-16">
-          <h2 className="text-2xl font-bold text-slate-800 mb-6 flex items-center gap-3">
-            <span className="w-1 h-8 bg-pink-600 rounded-full block"></span>
-            Descrição do Produto
-          </h2>
-          <div className="text-slate-600 leading-relaxed whitespace-pre-line text-lg">
-            {product.fullDescription}
-          </div>
-
-          {product.details && product.details.length > 0 && (
-            <div className="mt-8 pt-8 border-t border-slate-100">
-              <h3 className="text-xl font-bold text-slate-800 mb-4">
-                Detalhes e Especificações
-              </h3>
-              <ul className="space-y-2">
-                {product.details.map((detail, index) => (
-                  <li
-                    key={index}
-                    className="flex items-start gap-3 text-slate-600 text-lg"
-                  >
-                    <span className="mt-2 w-1.5 h-1.5 bg-pink-500 rounded-full shrink-0" />
-                    <span>{detail}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
-        </div>
+        {/* Componente reorganizado com informações estáticas */}
+        <ProductInfo
+          fullDescription={product.fullDescription}
+          details={product.details}
+        />
 
         {relatedProducts.length > 0 && (
           <div className="mt-20">

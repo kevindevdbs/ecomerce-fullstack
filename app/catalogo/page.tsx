@@ -4,29 +4,49 @@ import CatalogPage from "../../components/catalog/CatalogClient";
 export const dynamic = "force-dynamic";
 
 export default async function Catalogo() {
-  const productsFromDb = await prisma.product.findMany({
-    where: { isVisible: true }, // <--- FILTRO
-    orderBy: {
-      id: "desc",
-    },
-    include: {
-      category: true,
-    },
-  });
+  const [productsRaw, categoriesRaw] = await Promise.all([
+    prisma.product.findMany({
+      where: { isVisible: true },
+      orderBy: { id: "desc" },
+      select: {
+        id: true,
+        name: true,
+        price: true,
+        image: true,
+        additionalImages: true,
+        categoryId: true,
+        shortDescription: true,
+        fullDescription: true,
+        details: true,
+        isVisible: true,
+        hasLetterSelection: true,
+        wholesaleOptions: true,
+        category: {
+          select: { name: true, id: true, image: true, isVisible: true },
+        },
+      },
+    }),
+    prisma.category.findMany({
+      where: { isVisible: true },
+      select: {
+        id: true,
+        name: true,
+        image: true,
+        isVisible: true,
+      },
+    }),
+  ]);
 
-  const products = productsFromDb.map((product) => ({
+  // Normalização de dados para o Client Component
+  const products = productsRaw.map((product) => ({
     ...product,
     image: product.image || "",
-    category: product.category || { name: "Sem Categoria" },
+    category: product.category, // Já está correto pelo prisma
   }));
 
-  const categoriesFromDb = await prisma.category.findMany({
-    where: { isVisible: true }, // <--- FILTRO
-  });
-  const categories = categoriesFromDb.map((category) => ({
+  const categories = categoriesRaw.map((category) => ({
     ...category,
     image: category.image || "",
-    id: String(category.id),
   }));
 
   return <CatalogPage products={products} categories={categories} />;

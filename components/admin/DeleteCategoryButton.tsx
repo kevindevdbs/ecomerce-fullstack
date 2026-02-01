@@ -7,9 +7,11 @@ import { deleteCategory } from "@/app/actions/category";
 export default function DeleteCategoryButton({
   id,
   name,
+  className,
 }: {
   id: number;
   name: string;
+  className?: string;
 }) {
   const [isDeleting, setIsDeleting] = useState(false);
 
@@ -32,7 +34,7 @@ export default function DeleteCategoryButton({
     <button
       onClick={handleDelete}
       disabled={isDeleting}
-      className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+      className={`p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors ${className}`}
       title="Excluir categoria"
     >
       {isDeleting ? (

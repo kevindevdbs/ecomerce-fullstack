@@ -2,39 +2,60 @@
 
 import prisma from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
-import { redirect } from "next/navigation";
+
+/* 
+  Definição de Tipos de Retorno
+  Seguindo o padrão de ActionResponse definido em create-product.
+*/
+export type ActionResponse = {
+  error?: string;
+  success?: boolean;
+};
 
 // --- CRIAR ---
-export async function createCategory(formData: FormData) {
+export async function createCategory(
+  formData: FormData,
+): Promise<ActionResponse> {
   const name = formData.get("name") as string;
   const image = formData.get("image") as string;
-  // O checkbox retorna "on" se marcado, ou null se desmarcado
   const isVisible = formData.get("isVisible") === "on";
+
+  if (!name || name.trim().length === 0) {
+    return { error: "Nome da categoria é obrigatório." };
+  }
 
   try {
     await prisma.category.create({
       data: {
         name,
         image: image || null,
-        isVisible, // Salva no banco
+        isVisible,
       },
     });
 
     revalidatePath("/admin/categorias");
     revalidatePath("/catalogo");
     revalidatePath("/");
-  } catch (error) {
-    return { error: "Erro ao criar categoria." };
-  }
 
-  redirect("/admin/categorias");
+    return { success: true };
+  } catch (error) {
+    console.error(error);
+    return { error: "Erro ao criar categoria. Verifique se o nome já existe." };
+  }
 }
 
 // --- ATUALIZAR ---
-export async function updateCategory(id: number, formData: FormData) {
+export async function updateCategory(
+  id: number,
+  formData: FormData,
+): Promise<ActionResponse> {
   const name = formData.get("name") as string;
   const image = formData.get("image") as string;
   const isVisible = formData.get("isVisible") === "on";
+
+  if (!name || name.trim().length === 0) {
+    return { error: "Nome da categoria é obrigatório." };
+  }
 
   try {
     await prisma.category.update({
@@ -49,15 +70,16 @@ export async function updateCategory(id: number, formData: FormData) {
     revalidatePath("/admin/categorias");
     revalidatePath("/catalogo");
     revalidatePath("/");
+
+    return { success: true };
   } catch (error) {
+    console.error(error);
     return { error: "Erro ao atualizar categoria." };
   }
-
-  redirect("/admin/categorias");
 }
 
 // --- DELETAR ---
-export async function deleteCategory(id: number) {
+export async function deleteCategory(id: number): Promise<ActionResponse> {
   try {
     const category = await prisma.category.findUnique({
       where: { id },
@@ -80,6 +102,7 @@ export async function deleteCategory(id: number) {
 
     return { success: true };
   } catch (error) {
+    console.error(error);
     return { error: "Erro ao deletar categoria." };
   }
 }

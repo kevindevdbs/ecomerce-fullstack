@@ -89,11 +89,12 @@ export default async function CategoriesPage() {
                     >
                       <Pencil size={16} /> Editar
                     </Link>
-                    <div className="flex-1">
-                      {/* O componente DeleteCategoryButton precisa ser ajustado para mobile se ele renderiza só o ícone. 
-                          Se ele for um botão pequeno, podemos deixá-lo assim ou envolver numa div. 
-                          Assumindo que ele é um botão padrão: */}
-                      <DeleteCategoryButton id={cat.id} name={cat.name} />
+                    <div className="flex-1 flex justify-center">
+                      <DeleteCategoryButton
+                        id={cat.id}
+                        name={cat.name}
+                        className="w-full bg-red-50 text-red-600 hover:bg-red-100 flex justify-center py-2 h-auto"
+                      />
                     </div>
                   </div>
                 </div>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useEffect } from "react";
 import Image from "next/image";
 import clsx from "clsx";
 import { ChevronLeft, ChevronRight } from "lucide-react";
@@ -21,7 +21,7 @@ export default function ProductGallery({
   const [touchStart, setTouchStart] = useState<number | null>(null);
   const [touchEnd, setTouchEnd] = useState<number | null>(null);
 
-  // Reseta para a primeira foto se a lista de imagens mudar (ex: mudou de produto)
+  // Reseta para a primeira foto se a lista de imagens mudar
   useEffect(() => {
     setCurrentIndex(0);
   }, [images]);
@@ -62,7 +62,7 @@ export default function ProductGallery({
   };
 
   // --- LÓGICA DE SWIPE (ARRASTAR) ---
-  const minSwipeDistance = 50; // Distância mínima para considerar um "arraste"
+  const minSwipeDistance = 50;
 
   const onTouchStart = (e: React.TouchEvent) => {
     setTouchEnd(null);
@@ -79,11 +79,8 @@ export default function ProductGallery({
     const isLeftSwipe = distance > minSwipeDistance;
     const isRightSwipe = distance < -minSwipeDistance;
 
-    if (isLeftSwipe) {
-      nextImage();
-    } else if (isRightSwipe) {
-      prevImage();
-    }
+    if (isLeftSwipe) nextImage();
+    if (isRightSwipe) prevImage();
   };
 
   return (
@@ -95,7 +92,6 @@ export default function ProductGallery({
         onTouchMove={onTouchMove}
         onTouchEnd={onTouchEnd}
       >
-        {/* Container Deslizante */}
         <div
           className="flex h-full transition-transform duration-500 ease-out"
           style={{ transform: `translateX(-${currentIndex * 100}%)` }}
@@ -105,20 +101,18 @@ export default function ProductGallery({
               <Image
                 priority={index === 0}
                 src={img}
-                alt={`Imagem ${index + 1} de ${productName}`}
+                alt={`${productName} - Imagem ${index + 1}`}
                 fill
                 className="object-cover"
                 sizes="(max-width: 768px) 100vw, 50vw"
-                draggable={false} // Evita arrastar o elemento img nativo
+                draggable={false}
               />
             </div>
           ))}
         </div>
 
-        {/* SETAS DE NAVEGAÇÃO (Só aparecem se tiver + de 1 foto) */}
         {validImages.length > 1 && (
           <>
-            {/* Seta Esquerda */}
             <button
               onClick={(e) => {
                 e.stopPropagation();
@@ -130,7 +124,6 @@ export default function ProductGallery({
               <ChevronLeft size={24} />
             </button>
 
-            {/* Seta Direita */}
             <button
               onClick={(e) => {
                 e.stopPropagation();
@@ -142,7 +135,6 @@ export default function ProductGallery({
               <ChevronRight size={24} />
             </button>
 
-            {/* Indicador de Bolinhas (Mobile e Desktop) */}
             <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2 z-10">
               {validImages.map((_, idx) => (
                 <div
@@ -158,35 +150,29 @@ export default function ProductGallery({
         )}
       </div>
 
-      {/* --- MINIATURAS (THUMBNAILS) --- */}
       {validImages.length > 1 && (
-        <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide px-1 pt-1">
-          {validImages.map((img, index) => {
-            const isSelected = currentIndex === index;
-
-            return (
-              <button
-                key={index}
-                onClick={() => goToImage(index)}
-                className={clsx(
-                  "relative h-20 w-20 shrink-0 rounded-xl overflow-hidden border-2 transition-all focus:outline-none",
-                  isSelected
-                    ? "border-pink-500 shadow-md shadow-pink-100 scale-105 z-10"
-                    : "border-slate-100 hover:border-pink-300 bg-slate-50 opacity-70 hover:opacity-100",
-                )}
-                aria-label={`Ir para imagem ${index + 1}`}
-              >
-                <Image
-                  priority={index === 0}
-                  src={img}
-                  alt={`Miniatura ${index + 1}`}
-                  fill
-                  className="object-cover"
-                  sizes="80px"
-                />
-              </button>
-            );
-          })}
+        <div className="flex gap-3 overflow-x-auto pb-2 px-1 pt-1 no-scrollbar">
+          {validImages.map((img, index) => (
+            <button
+              key={index}
+              onClick={() => goToImage(index)}
+              className={clsx(
+                "relative h-20 w-20 shrink-0 rounded-xl overflow-hidden border-2 transition-all focus:outline-none",
+                currentIndex === index
+                  ? "border-pink-500 shadow-md shadow-pink-100 scale-105 z-10"
+                  : "border-slate-100 hover:border-pink-300 bg-slate-50 opacity-70 hover:opacity-100",
+              )}
+              aria-label={`Ir para imagem ${index + 1}`}
+            >
+              <Image
+                src={img}
+                alt={`Miniatura ${index + 1}`}
+                fill
+                className="object-cover"
+                sizes="80px"
+              />
+            </button>
+          ))}
         </div>
       )}
     </div>

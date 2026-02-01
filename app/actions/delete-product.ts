@@ -2,8 +2,11 @@
 
 import prisma from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
+import { ActionResponse } from "@/types";
 
-export async function deleteProduct(productId: number) {
+export async function deleteProduct(
+  productId: number,
+): Promise<ActionResponse> {
   try {
     // O 'productVariant' não existe mais, então removemos aquela linha.
 

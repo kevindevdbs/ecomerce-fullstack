@@ -1,45 +1,33 @@
-"use client";
-
 import Image from "next/image";
 import Link from "next/link";
-import { FaShoppingCart } from "react-icons/fa";
+import { Product } from "@/types";
 
-// Definimos a interface para aceitar o objeto 'product'
-interface ProductCardProps {
-  product: {
-    id: number;
-    name: string;
-    image: string;
-    price: number;
-    shortDescription?: string; // Adicionado como opcional
-    // Aceita category como string (antigo) ou objeto (novo Prisma)
-    category: string | { name: string } | null;
-    [key: string]: any; // Permite outras propriedades sem erro
-  };
+export interface ProductCardProps {
+  product: Product;
+  className?: string;
 }
 
-// Desestruturamos { product } aqui
-export default function ProductCard({ product }: ProductCardProps) {
-  const handleAddToCart = (e: React.MouseEvent) => {
-    e.preventDefault(); // Evita abrir a página do produto ao clicar no carrinho
-    console.log(`Produto ${product.name} adicionado ao carrinho.`);
-    // Aqui você pode chamar o addItemToCart do contexto futuramente
-  };
+export default function ProductCard({ product, className }: ProductCardProps) {
+  // Normalização segura da categoria
+  const categoryName = product.category?.name || "Sem categoria";
 
-  // Lógica para pegar o nome da categoria corretamente
-  const categoryName =
-    typeof product.category === "object" && product.category !== null
-      ? product.category.name
-      : product.category || "";
+  // Formatador de preço com Intl
+  const formattedPrice = new Intl.NumberFormat("pt-BR", {
+    style: "currency",
+    currency: "BRL",
+  }).format(product.price);
 
   return (
-    <div className="bg-white rounded-4xl p-3 md:p-4 shadow-[0_4px_20px_rgb(0,0,0,0.03)] hover:shadow-[0_8px_30px_rgb(0,0,0,0.06)] transition-all group border border-slate-100/80 hover:border-pink-100/80 flex flex-col relative z-0 h-full">
+    <div
+      className={`bg-white rounded-4xl p-3 md:p-4 shadow-[0_4px_20px_rgb(0,0,0,0.03)] hover:shadow-[0_8px_30px_rgb(0,0,0,0.06)] transition-all group border border-slate-100/80 hover:border-pink-100/80 flex flex-col relative z-0 h-full ${
+        className || ""
+      }`}
+    >
       {/* Imagem do Produto */}
       <div className="relative aspect-square rounded-3xl overflow-hidden mb-4 bg-slate-50 border border-slate-100/50">
-        <Link href={`/produto/${product.id}`}>
+        <Link href={`/produto/${product.id}`} className="block w-full h-full">
           <Image
-            priority={true}
-            src={product.image || "/default-image.jpg"}
+            src={product.image || "/images/placeholder-product.jpg"} // Fallback mais robusto
             alt={product.name}
             fill
             className="object-cover group-hover:scale-110 transition-transform duration-700"
@@ -47,9 +35,9 @@ export default function ProductCard({ product }: ProductCardProps) {
           />
         </Link>
 
-        {/* Badge de Categoria - AJUSTADO PARA MOBILE */}
+        {/* Badge de Categoria */}
         {categoryName && (
-          <span className="absolute top-2 left-2 md:top-3 md:left-3 bg-white/95 backdrop-blur-sm text-[9px] md:text-[10px] uppercase tracking-wider font-bold text-slate-600 px-2 py-1 md:px-3 md:py-1.5 rounded-full border border-slate-100/50 shadow-sm max-w-[75%] truncate">
+          <span className="absolute top-2 left-2 md:top-3 md:left-3 bg-white/95 backdrop-blur-sm text-[9px] md:text-[10px] uppercase tracking-wider font-bold text-slate-600 px-2 py-1 md:px-3 md:py-1.5 rounded-full border border-slate-100/50 shadow-sm max-w-[75%] truncate z-10">
             {categoryName}
           </span>
         )}
@@ -66,18 +54,16 @@ export default function ProductCard({ product }: ProductCardProps) {
           </h3>
         </Link>
 
-        {/* DESCRIÇÃO CURTA ADICIONADA AQUI */}
+        {/* Descrição Curta (Visível apenas em Desktop) */}
         {product.shortDescription && (
           <p className="text-sm text-slate-500 mb-3 line-clamp-2 leading-relaxed hidden md:block">
             {product.shortDescription}
           </p>
         )}
-        {/* Obs: Adicionei 'hidden md:block' acima se quiser esconder no celular para economizar espaço. 
-            Se quiser mostrar no celular também, remova o 'hidden md:block'. */}
 
         <div className="mt-auto pt-2 flex items-end justify-between font-extrabold">
           <p className="text-transparent bg-clip-text bg-linear-to-r from-pink-500 to-purple-600 text-xl md:text-2xl">
-            R$ {product.price.toFixed(2).replace(".", ",")}
+            {formattedPrice}
           </p>
         </div>
       </div>

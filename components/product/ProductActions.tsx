@@ -2,20 +2,10 @@
 
 import { FaShoppingCart, FaWhatsapp } from "react-icons/fa";
 import { useCart } from "@/context/CartContext";
-
-// Interface simplificada compatível com o Prisma e com o que o CartContext espera
-interface ProductProps {
-  id: number;
-  name: string;
-  price: number;
-  image: string;
-  // Permitimos outros campos (como category, variants) passarem sem erro
-  [key: string]: any;
-}
+import { Product } from "@/types";
 
 interface ProductActionsProps {
-  product: ProductProps;
-  selectedVariantId: string;
+  product: Product;
   quantity: number;
   selectedLetter?: string;
   isDisabled?: boolean;
@@ -23,7 +13,6 @@ interface ProductActionsProps {
 
 export default function ProductActions({
   product,
-  selectedVariantId,
   quantity,
   selectedLetter,
   isDisabled = false,
@@ -33,11 +22,7 @@ export default function ProductActions({
   const handleAddToCart = () => {
     if (isDisabled) return;
 
-    // Chama o contexto.
-    // OBS: Se o seu CartContext precisar da "selectedLetter", você precisará
-    // atualizar a função addItemToCart no Context também.
-    // Por enquanto, mandamos como estava antes.
-    addItemToCart(product, quantity, selectedVariantId);
+    addItemToCart(product, quantity, selectedLetter);
   };
 
   return (
