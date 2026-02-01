@@ -1,9 +1,16 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import Image from "next/image";
 import clsx from "clsx";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import {
+  ChevronLeft,
+  ChevronRight,
+  X,
+  ZoomIn,
+  ZoomOut,
+  Maximize2,
+} from "lucide-react";
 
 interface ProductGalleryProps {
   images: string[];
@@ -14,167 +21,278 @@ export default function ProductGallery({
   images,
   productName,
 }: ProductGalleryProps) {
-  // Garantir que images seja um array válido e sem strings vazias
   const validImages = images?.filter((img) => img && img !== "") || [];
-
   const [currentIndex, setCurrentIndex] = useState(0);
+
+  // Estados do Lightbox (Tela Cheia)
+  const [isLightboxOpen, setIsLightboxOpen] = useState(false);
+  const [isZoomed, setIsZoomed] = useState(false);
+  const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
+
+  // Estados de Swipe (Arrastar)
   const [touchStart, setTouchStart] = useState<number | null>(null);
   const [touchEnd, setTouchEnd] = useState<number | null>(null);
 
-  // Reseta para a primeira foto se a lista de imagens mudar
+  // Reseta ao trocar de produto
   useEffect(() => {
     setCurrentIndex(0);
+    setIsLightboxOpen(false);
+    setIsZoomed(false);
   }, [images]);
 
-  // Se não tiver imagens, mostra placeholder
-  if (validImages.length === 0) {
-    return (
-      <div className="aspect-square md:aspect-auto md:h-125 rounded-4xl bg-slate-100 flex items-center justify-center text-slate-300 border border-slate-200">
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          fill="none"
-          viewBox="0 0 24 24"
-          strokeWidth={1.5}
-          stroke="currentColor"
-          className="w-16 h-16"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z"
-          />
-        </svg>
-      </div>
-    );
-  }
+  // Bloqueia o scroll da página quando o lightbox está aberto
+  useEffect(() => {
+    if (isLightboxOpen) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "auto";
+    }
+    return () => {
+      document.body.style.overflow = "auto";
+    };
+  }, [isLightboxOpen]);
 
-  // --- NAVEGAÇÃO ---
-  const nextImage = () => {
+  // Navegação por Teclado
+  const handleKeyDown = useCallback(
+    (e: KeyboardEvent) => {
+      if (!isLightboxOpen) return;
+      if (e.key === "Escape") closeLightbox();
+      if (e.key === "ArrowRight") nextImage();
+      if (e.key === "ArrowLeft") prevImage();
+    },
+    [isLightboxOpen],
+  );
+
+  useEffect(() => {
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [handleKeyDown]);
+
+  if (validImages.length === 0) return null;
+
+  // --- FUNÇÕES DE NAVEGAÇÃO ---
+  const nextImage = (e?: React.MouseEvent) => {
+    e?.stopPropagation();
     setCurrentIndex((prev) => (prev === validImages.length - 1 ? 0 : prev + 1));
+    setIsZoomed(false);
   };
 
-  const prevImage = () => {
+  const prevImage = (e?: React.MouseEvent) => {
+    e?.stopPropagation();
     setCurrentIndex((prev) => (prev === 0 ? validImages.length - 1 : prev - 1));
+    setIsZoomed(false);
   };
 
   const goToImage = (index: number) => {
     setCurrentIndex(index);
+    setIsZoomed(false);
   };
 
-  // --- LÓGICA DE SWIPE (ARRASTAR) ---
-  const minSwipeDistance = 50;
+  const openLightbox = () => setIsLightboxOpen(true);
 
+  const closeLightbox = () => {
+    setIsLightboxOpen(false);
+    setIsZoomed(false);
+  };
+
+  const toggleZoom = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setIsZoomed(!isZoomed);
+  };
+
+  // Efeito de "Lupa" (Mover a imagem com o mouse quando zoom ativado)
+  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (!isZoomed) return;
+    const { left, top, width, height } =
+      e.currentTarget.getBoundingClientRect();
+    const x = ((e.clientX - left) / width) * 100;
+    const y = ((e.clientY - top) / height) * 100;
+    setMousePosition({ x, y });
+  };
+
+  // --- SWIPE LOGIC ---
+  const minSwipeDistance = 50;
   const onTouchStart = (e: React.TouchEvent) => {
     setTouchEnd(null);
     setTouchStart(e.targetTouches[0].clientX);
   };
-
-  const onTouchMove = (e: React.TouchEvent) => {
+  const onTouchMove = (e: React.TouchEvent) =>
     setTouchEnd(e.targetTouches[0].clientX);
-  };
-
   const onTouchEnd = () => {
     if (!touchStart || !touchEnd) return;
     const distance = touchStart - touchEnd;
-    const isLeftSwipe = distance > minSwipeDistance;
-    const isRightSwipe = distance < -minSwipeDistance;
-
-    if (isLeftSwipe) nextImage();
-    if (isRightSwipe) prevImage();
+    if (distance > minSwipeDistance) nextImage();
+    else if (distance < -minSwipeDistance) prevImage();
   };
 
   return (
-    <div className="flex flex-col gap-4 h-full select-none">
-      {/* --- ÁREA PRINCIPAL (CARROSSEL) --- */}
-      <div
-        className="relative aspect-square md:aspect-auto md:h-125 rounded-4xl overflow-hidden bg-slate-50 border border-slate-100 shadow-sm group"
-        onTouchStart={onTouchStart}
-        onTouchMove={onTouchMove}
-        onTouchEnd={onTouchEnd}
-      >
+    <>
+      {/* --- GALERIA PRINCIPAL (PÁGINA) --- */}
+      <div className="flex flex-col gap-4 h-full select-none group/gallery">
         <div
-          className="flex h-full transition-transform duration-500 ease-out"
-          style={{ transform: `translateX(-${currentIndex * 100}%)` }}
+          className="relative aspect-square md:aspect-auto md:h-125 rounded-4xl overflow-hidden bg-slate-50 border border-slate-100 shadow-sm cursor-zoom-in"
+          onClick={openLightbox}
+          onTouchStart={onTouchStart}
+          onTouchMove={onTouchMove}
+          onTouchEnd={onTouchEnd}
         >
-          {validImages.map((img, index) => (
-            <div key={index} className="min-w-full h-full relative">
-              <Image
-                priority={index === 0}
-                src={img}
-                alt={`${productName} - Imagem ${index + 1}`}
-                fill
-                className="object-cover"
-                sizes="(max-width: 768px) 100vw, 50vw"
-                draggable={false}
+          {/* Imagem Atual */}
+          <div
+            className="flex h-full transition-transform duration-500 ease-out"
+            style={{ transform: `translateX(-${currentIndex * 100}%)` }}
+          >
+            {validImages.map((img, index) => (
+              <div key={index} className="min-w-full h-full relative">
+                <Image
+                  src={img}
+                  alt={`${productName} - Foto ${index + 1}`}
+                  fill
+                  className="object-cover"
+                  priority={index === 0}
+                  draggable={false}
+                />
+              </div>
+            ))}
+          </div>
+
+          {/* Botão Flutuante "Expandir" */}
+          <div className="absolute top-4 right-4 bg-white/90 backdrop-blur text-slate-700 p-2 rounded-full shadow-lg opacity-0 group-hover/gallery:opacity-100 transition-opacity pointer-events-none">
+            <Maximize2 size={20} />
+          </div>
+
+          {/* Setas (Desktop) */}
+          {validImages.length > 1 && (
+            <>
+              <button
+                onClick={prevImage}
+                className="absolute top-1/2 left-4 -translate-y-1/2 bg-white/80 hover:bg-white p-2 rounded-full shadow-lg opacity-0 group-hover/gallery:opacity-100 transition-all hover:scale-110 hidden md:flex"
+              >
+                <ChevronLeft size={24} />
+              </button>
+              <button
+                onClick={nextImage}
+                className="absolute top-1/2 right-4 -translate-y-1/2 bg-white/80 hover:bg-white p-2 rounded-full shadow-lg opacity-0 group-hover/gallery:opacity-100 transition-all hover:scale-110 hidden md:flex"
+              >
+                <ChevronRight size={24} />
+              </button>
+            </>
+          )}
+
+          {/* Indicadores (Dots) */}
+          <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2 z-10 pointer-events-none">
+            {validImages.map((_, idx) => (
+              <div
+                key={idx}
+                className={clsx(
+                  "w-2 h-2 rounded-full transition-all shadow-sm",
+                  idx === currentIndex ? "bg-white w-4" : "bg-white/50",
+                )}
               />
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
 
+        {/* Thumbnails */}
         {validImages.length > 1 && (
-          <>
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                prevImage();
-              }}
-              className="absolute top-1/2 left-4 -translate-y-1/2 bg-white/80 backdrop-blur-sm hover:bg-white text-slate-700 p-2 rounded-full shadow-lg border border-slate-100 opacity-0 group-hover:opacity-100 transition-all duration-300 hover:scale-110 z-10 hidden md:flex"
-              aria-label="Imagem Anterior"
-            >
-              <ChevronLeft size={24} />
-            </button>
-
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                nextImage();
-              }}
-              className="absolute top-1/2 right-4 -translate-y-1/2 bg-white/80 backdrop-blur-sm hover:bg-white text-slate-700 p-2 rounded-full shadow-lg border border-slate-100 opacity-0 group-hover:opacity-100 transition-all duration-300 hover:scale-110 z-10 hidden md:flex"
-              aria-label="Próxima Imagem"
-            >
-              <ChevronRight size={24} />
-            </button>
-
-            <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2 z-10">
-              {validImages.map((_, idx) => (
-                <div
-                  key={idx}
-                  className={clsx(
-                    "w-2 h-2 rounded-full transition-all shadow-sm",
-                    idx === currentIndex ? "bg-white w-4" : "bg-white/50",
-                  )}
-                />
-              ))}
-            </div>
-          </>
+          <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide px-1 pt-1">
+            {validImages.map((img, index) => (
+              <button
+                key={index}
+                onClick={() => goToImage(index)}
+                className={clsx(
+                  "relative h-20 w-20 shrink-0 rounded-xl overflow-hidden border-2 transition-all focus:outline-none",
+                  currentIndex === index
+                    ? "border-pink-500 shadow-md scale-105"
+                    : "border-slate-100 opacity-70 hover:opacity-100",
+                )}
+              >
+                <Image src={img} alt="" fill className="object-cover" />
+              </button>
+            ))}
+          </div>
         )}
       </div>
 
-      {validImages.length > 1 && (
-        <div className="flex gap-3 overflow-x-auto pb-2 px-1 pt-1 no-scrollbar">
-          {validImages.map((img, index) => (
-            <button
-              key={index}
-              onClick={() => goToImage(index)}
+      {/* --- LIGHTBOX (MODAL TELA CHEIA) --- */}
+      {isLightboxOpen && (
+        <div
+          className="fixed inset-0 z-9999 flex items-center justify-center bg-black/95 backdrop-blur-md animate-in fade-in duration-300"
+          onClick={closeLightbox} // Fecha ao clicar fora
+        >
+          {/* Botão Fechar */}
+          <button
+            onClick={closeLightbox}
+            className="absolute top-4 right-4 text-white/70 hover:text-white p-2 bg-black/50 hover:bg-white/20 rounded-full transition-all z-50"
+          >
+            <X size={32} />
+          </button>
+
+          {/* Área da Imagem Central */}
+          <div
+            className="relative w-full h-full flex items-center justify-center p-4 md:p-10 overflow-hidden"
+            onClick={(e) => e.stopPropagation()} // Evita fechar ao clicar na área da imagem
+          >
+            <div
               className={clsx(
-                "relative h-20 w-20 shrink-0 rounded-xl overflow-hidden border-2 transition-all focus:outline-none",
-                currentIndex === index
-                  ? "border-pink-500 shadow-md shadow-pink-100 scale-105 z-10"
-                  : "border-slate-100 hover:border-pink-300 bg-slate-50 opacity-70 hover:opacity-100",
+                "relative w-full h-full flex items-center justify-center transition-all duration-300",
+                isZoomed ? "cursor-zoom-out" : "cursor-zoom-in",
               )}
-              aria-label={`Ir para imagem ${index + 1}`}
+              onClick={toggleZoom}
+              onMouseMove={handleMouseMove}
             >
               <Image
-                src={img}
-                alt={`Miniatura ${index + 1}`}
+                src={validImages[currentIndex]}
+                alt={productName}
                 fill
-                className="object-cover"
-                sizes="80px"
+                quality={100} // Qualidade máxima no zoom
+                className={clsx(
+                  "transition-transform duration-200 ease-out",
+                  isZoomed ? "object-cover scale-150" : "object-contain",
+                )}
+                style={
+                  isZoomed
+                    ? {
+                        transformOrigin: `${mousePosition.x}% ${mousePosition.y}%`,
+                      }
+                    : undefined
+                }
               />
-            </button>
-          ))}
+            </div>
+          </div>
+
+          {/* Controles de Navegação (Lightbox) */}
+          {validImages.length > 1 && (
+            <>
+              <button
+                onClick={prevImage}
+                className="absolute left-4 top-1/2 -translate-y-1/2 text-white/70 hover:text-white p-3 hover:bg-white/10 rounded-full transition-all z-50"
+              >
+                <ChevronLeft size={48} />
+              </button>
+
+              <button
+                onClick={nextImage}
+                className="absolute right-4 top-1/2 -translate-y-1/2 text-white/70 hover:text-white p-3 hover:bg-white/10 rounded-full transition-all z-50"
+              >
+                <ChevronRight size={48} />
+              </button>
+            </>
+          )}
+
+          {/* Indicador de Zoom (Dica Visual) */}
+          <div className="absolute bottom-8 left-1/2 -translate-x-1/2 bg-black/50 text-white px-4 py-2 rounded-full text-sm font-medium backdrop-blur-sm pointer-events-none flex items-center gap-2">
+            {isZoomed ? <ZoomOut size={16} /> : <ZoomIn size={16} />}
+            {isZoomed ? "Clique para reduzir" : "Clique para ampliar"}
+          </div>
+
+          {/* Miniaturas no Lightbox (Opcional - só em telas grandes) */}
+          <div className="absolute bottom-6 right-6 hidden lg:flex gap-2 z-50">
+            <span className="text-white/80 font-mono text-lg bg-black/40 px-3 py-1 rounded-lg backdrop-blur">
+              {currentIndex + 1} / {validImages.length}
+            </span>
+          </div>
         </div>
       )}
-    </div>
+    </>
   );
 }
