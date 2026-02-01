@@ -82,7 +82,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
   };
 
   const addItemToCart = (
-    product: CartProduct,
+    product: Product,
     quantity: number,
     selectedLetter?: string,
   ) => {
