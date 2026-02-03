@@ -67,7 +67,7 @@ export default async function PedidosPage() {
   type Order = (typeof orders)[0];
 
   return (
-    <div className="min-h-screen bg-linear-to-br from-pink-50 via-purple-50 to-blue-50 py-12 px-4">
+    <div className="min-h-screen bg-linear-to-br from-pink-50 via-purple-50 to-blue-50 py-12 px-4 pt-24">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="mb-8">
