@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { MercadoPagoConfig, Payment } from "mercadopago";
 import prisma from "@/lib/prisma";
-import { OrderItem } from "@/types";
 import { Prisma } from "@prisma/client";
 
 // Webhook para receber notificações do Mercado Pago
@@ -9,12 +8,25 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
 
-    console.log(
-      "📢 Notificação do Mercado Pago recebida:",
-      JSON.stringify(body, null, 2),
-    );
+    console.log("=".repeat(60));
+    console.log("📢 WEBHOOK RECEBIDO!");
+    console.log("Body completo:", JSON.stringify(body, null, 2));
+    console.log("=".repeat(60));
 
-    const { type, data } = body;
+    // Validar se as credenciais estão configuradas
+    const token = process.env.MERCADOPAGO_ACCESS_TOKEN;
+    console.log("🔑 Token existe?", !!token);
+
+    if (!token || token === "COLE_SEU_TOKEN_DE_PRODUCAO_AQUI") {
+      console.error("❌ MERCADOPAGO_ACCESS_TOKEN não configurado!");
+      return NextResponse.json(
+        { error: "Credenciais não configuradas" },
+        { status: 500 },
+      );
+    }
+
+    const { type, data, action } = body;
+    console.log(`📦 Type: ${type}, Action: ${action}, Payment ID: ${data?.id}`);
 
     if (type === "payment") {
       const paymentId = data.id;
@@ -29,12 +41,10 @@ export async function POST(request: NextRequest) {
       const paymentInfo = await payment.get({ id: paymentId });
 
       console.log(`📊 Status do pagamento: ${paymentInfo.status}`);
-      console.log(`📋 Dados do pagador:`, {
-        email: paymentInfo.payer?.email,
-        first_name: paymentInfo.payer?.first_name,
-        last_name: paymentInfo.payer?.last_name,
-        phone: paymentInfo.payer?.phone?.number,
-      });
+      console.log(
+        `📋 Dados COMPLETOS do pagamento:`,
+        JSON.stringify(paymentInfo, null, 2),
+      );
 
       // Buscar pedido existente por diferentes identificadores
       const externalReference = paymentInfo.external_reference;
@@ -113,11 +123,26 @@ export async function POST(request: NextRequest) {
       // }
     }
 
-    return NextResponse.json({ success: true }, { status: 200 });
-  } catch (error) {
-    console.error("❌ Erro ao processar webhook:", error);
+    console.log("✅ Webhook processado com sucesso!");
+    console.log("=".repeat(60));
     return NextResponse.json(
-      { error: "Erro ao processar notificação" },
+      { success: true, received: true },
+      { status: 200 },
+    );
+  } catch (error) {
+    console.error("=".repeat(60));
+    console.error("❌ ERRO NO WEBHOOK:");
+    console.error(
+      "Mensagem:",
+      error instanceof Error ? error.message : String(error),
+    );
+    console.error("Stack:", error instanceof Error ? error.stack : "N/A");
+    console.error("=".repeat(60));
+    return NextResponse.json(
+      {
+        error: "Erro ao processar notificação",
+        message: error instanceof Error ? error.message : String(error),
+      },
       { status: 500 },
     );
   }
@@ -125,5 +150,9 @@ export async function POST(request: NextRequest) {
 
 // Método GET para validação do endpoint (Mercado Pago testa o webhook)
 export async function GET() {
-  return NextResponse.json({ status: "ok" }, { status: 200 });
+  console.log("✅ GET request no webhook - Mercado Pago validando endpoint");
+  return NextResponse.json(
+    { status: "ok", webhook: "active" },
+    { status: 200 },
+  );
 }
