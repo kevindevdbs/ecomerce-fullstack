@@ -47,6 +47,15 @@ export async function POST(request: NextRequest) {
           JSON.stringify(paymentInfo, null, 2),
         );
 
+        // Log específico dos dados do cliente
+        console.log("👤 DADOS DO CLIENTE RECEBIDOS:");
+        console.log("  - Email:", paymentInfo.payer?.email);
+        console.log("  - First Name:", paymentInfo.payer?.first_name);
+        console.log("  - Last Name:", paymentInfo.payer?.last_name);
+        console.log("  - Telefone:", paymentInfo.payer?.phone?.number);
+        console.log("  - Tipo de identificação:", paymentInfo.payer?.identification?.type);
+        console.log("  - Número de identificação:", paymentInfo.payer?.identification?.number);
+
         // Buscar pedido existente por diferentes identificadores
         const externalReference = paymentInfo.external_reference;
 
@@ -73,6 +82,18 @@ export async function POST(request: NextRequest) {
         );
 
         // Atualizar ou criar pedido no banco
+        const firstName = paymentInfo.payer?.first_name || "";
+        const lastName = paymentInfo.payer?.last_name || "";
+        const fullName = `${firstName} ${lastName}`.trim();
+        
+        // Se não tiver nome, usar identificação (CPF/CNPJ)
+        const customerName = fullName || 
+          (paymentInfo.payer?.identification?.number 
+            ? `Cliente CPF ${paymentInfo.payer.identification.number}`
+            : null);
+
+        console.log("✅ Nome processado:", customerName);
+
         const orderData = {
           paymentId: String(paymentId),
           externalReference: externalReference || undefined,
@@ -81,9 +102,7 @@ export async function POST(request: NextRequest) {
             []) as Prisma.InputJsonValue,
           total: paymentInfo.transaction_amount || 0,
           customerEmail: paymentInfo.payer?.email || null,
-          customerName:
-            `${paymentInfo.payer?.first_name || ""} ${paymentInfo.payer?.last_name || ""}`.trim() ||
-            null,
+          customerName: customerName,
           customerPhone: paymentInfo.payer?.phone?.number || null,
           paymentMethod: paymentInfo.payment_method_id || null,
           updatedAt: new Date(),
