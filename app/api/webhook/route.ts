@@ -1,15 +1,17 @@
 import { NextRequest, NextResponse } from "next/server";
-import { MercadoPagoConfig, Payment } from "mercadopago";
+import { MercadoPagoConfig, Payment, MerchantOrder } from "mercadopago";
 import prisma from "@/lib/prisma";
 import { Prisma } from "@prisma/client";
 
 // Webhook para receber notificações do Mercado Pago
 export async function POST(request: NextRequest) {
+  const startTime = Date.now();
+  console.log("=".repeat(60));
+  console.log("📢 WEBHOOK POST CHAMADO!", new Date().toISOString());
+
   try {
     const body = await request.json();
 
-    console.log("=".repeat(60));
-    console.log("📢 WEBHOOK RECEBIDO!");
     console.log("Body completo:", JSON.stringify(body, null, 2));
     console.log("=".repeat(60));
 
@@ -28,10 +30,41 @@ export async function POST(request: NextRequest) {
     const { type, data, action } = body;
     console.log(`📦 Type: ${type}, Action: ${action}, Payment ID: ${data?.id}`);
 
-    if (type === "payment") {
-      const paymentId = data.id;
+    // Mercado Pago pode enviar "payment" ou "merchant_order"
+    if (type === "payment" || type === "topic_merchant_order_wh") {
+      let paymentId = data.id;
 
-      console.log(`💰 Processando pagamento ${paymentId}`);
+      // Se for merchant_order, precisamos buscar o ID do pagamento dentro do pedido
+      if (type === "topic_merchant_order_wh") {
+        console.log("📦 Recebido merchant_order, buscando dados do pedido...");
+
+        const client = new MercadoPagoConfig({
+          accessToken: process.env.MERCADOPAGO_ACCESS_TOKEN || "",
+        });
+        const merchantOrderClient = new MerchantOrder(client);
+        const merchantOrder = await merchantOrderClient.get({
+          merchantOrderId: data.id,
+        });
+
+        console.log(
+          "📦 Merchant Order:",
+          JSON.stringify(merchantOrder, null, 2),
+        );
+
+        // Pegar o primeiro payment ID do merchant order
+        if (merchantOrder.payments && merchantOrder.payments.length > 0) {
+          paymentId = String(merchantOrder.payments[0].id);
+          console.log(`💰 Payment ID encontrado: ${paymentId}`);
+        } else {
+          console.log("⚠️ Merchant order sem pagamentos ainda, ignorando...");
+          return NextResponse.json(
+            { success: true, message: "Merchant order sem pagamentos" },
+            { status: 200 },
+          );
+        }
+      } else {
+        console.log(`💰 Processando pagamento ${paymentId}`);
+      }
 
       try {
         // Buscar detalhes do pagamento
@@ -53,8 +86,14 @@ export async function POST(request: NextRequest) {
         console.log("  - First Name:", paymentInfo.payer?.first_name);
         console.log("  - Last Name:", paymentInfo.payer?.last_name);
         console.log("  - Telefone:", paymentInfo.payer?.phone?.number);
-        console.log("  - Tipo de identificação:", paymentInfo.payer?.identification?.type);
-        console.log("  - Número de identificação:", paymentInfo.payer?.identification?.number);
+        console.log(
+          "  - Tipo de identificação:",
+          paymentInfo.payer?.identification?.type,
+        );
+        console.log(
+          "  - Número de identificação:",
+          paymentInfo.payer?.identification?.number,
+        );
 
         // Buscar pedido existente por diferentes identificadores
         const externalReference = paymentInfo.external_reference;
@@ -85,10 +124,11 @@ export async function POST(request: NextRequest) {
         const firstName = paymentInfo.payer?.first_name || "";
         const lastName = paymentInfo.payer?.last_name || "";
         const fullName = `${firstName} ${lastName}`.trim();
-        
+
         // Se não tiver nome, usar identificação (CPF/CNPJ)
-        const customerName = fullName || 
-          (paymentInfo.payer?.identification?.number 
+        const customerName =
+          fullName ||
+          (paymentInfo.payer?.identification?.number
             ? `Cliente CPF ${paymentInfo.payer.identification.number}`
             : null);
 
@@ -152,6 +192,7 @@ export async function POST(request: NextRequest) {
     }
 
     console.log("✅ Webhook processado com sucesso!");
+    console.log(`⏱️ Tempo de processamento: ${Date.now() - startTime}ms`);
     console.log("=".repeat(60));
     return NextResponse.json(
       { success: true, received: true },
@@ -159,7 +200,7 @@ export async function POST(request: NextRequest) {
     );
   } catch (error) {
     console.error("=".repeat(60));
-    console.error("❌ ERRO GERAL NO WEBHOOK:");
+    console.error("❌ ERRO GERAL NO WEBHOOK:", new Date().toISOString());
     console.error("Tipo:", typeof error);
     console.error("String:", String(error));
     console.error(
@@ -184,9 +225,15 @@ export async function POST(request: NextRequest) {
 
 // Método GET para validação do endpoint (Mercado Pago testa o webhook)
 export async function GET() {
-  console.log("✅ GET request no webhook - Mercado Pago validando endpoint");
+  const timestamp = new Date().toISOString();
+  console.log("✅ GET request no webhook - Validação ou teste", timestamp);
   return NextResponse.json(
-    { status: "ok", webhook: "active" },
+    {
+      status: "ok",
+      webhook: "active",
+      timestamp,
+      message: "Webhook está funcionando!",
+    },
     { status: 200 },
   );
 }

@@ -58,18 +58,22 @@ export async function POST(request: NextRequest) {
 
     const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000";
 
+    // Remove trailing slash para evitar barras duplas
+    const cleanBaseUrl = baseUrl.endsWith("/") ? baseUrl.slice(0, -1) : baseUrl;
+
     // Gerar referência externa única
     const externalReference = `order-${Date.now()}`;
 
     // Log para debug
     console.log("🔍 Criando preferência com:", {
       itemsCount: preferenceItems.length,
-      baseUrl,
+      baseUrl: cleanBaseUrl,
       backUrls: {
-        success: `${baseUrl}/pagamento/sucesso`,
-        failure: `${baseUrl}/pagamento/falha`,
-        pending: `${baseUrl}/pagamento/pendente`,
+        success: `${cleanBaseUrl}/pagamento/sucesso`,
+        failure: `${cleanBaseUrl}/pagamento/falha`,
+        pending: `${cleanBaseUrl}/pagamento/pendente`,
       },
+      webhookUrl: `${cleanBaseUrl}/api/webhook`,
     });
 
     // Cria a preferência de pagamento
@@ -102,12 +106,12 @@ export async function POST(request: NextRequest) {
           default_installments: 1,
         },
         back_urls: {
-          success: `${baseUrl}/pagamento/sucesso`,
-          failure: `${baseUrl}/pagamento/falha`,
-          pending: `${baseUrl}/pagamento/pendente`,
+          success: `${cleanBaseUrl}/pagamento/sucesso`,
+          failure: `${cleanBaseUrl}/pagamento/falha`,
+          pending: `${cleanBaseUrl}/pagamento/pendente`,
         },
-        auto_return: "approved" as const,
-        notification_url: `${baseUrl}/api/webhook`,
+        auto_return: "all" as const, // Retorna sempre (approved, pending, rejected)
+        notification_url: `${cleanBaseUrl}/api/webhook`,
         statement_descriptor: "LOJA ARTESANAL",
         external_reference: externalReference,
       },
@@ -137,7 +141,7 @@ export async function POST(request: NextRequest) {
       id: result.id,
       init_point: result.init_point,
     });
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
   } catch (error: any) {
     console.error("Erro ao criar preferência de pagamento:", error);
 
