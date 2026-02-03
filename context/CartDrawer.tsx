@@ -56,8 +56,8 @@ export default function CartDrawer() {
       }
 
       // Redireciona para o checkout do Mercado Pago em nova aba
-      // Em produção, use init_point. Em desenvolvimento/sandbox, use sandbox_init_point
-      const checkoutUrl = data.sandbox_init_point || data.init_point;
+      // Usando init_point para pagamentos reais (produção)
+      const checkoutUrl = data.init_point;
 
       if (!checkoutUrl) {
         throw new Error("URL de checkout não recebida do Mercado Pago");
