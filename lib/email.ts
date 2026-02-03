@@ -1,15 +1,7 @@
 import { Resend } from "resend";
+import { OrderItem } from "@/types";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
-
-interface OrderItem {
-  product?: {
-    name: string;
-  };
-  quantity: number;
-  unitPrice: number;
-  selectedLetter?: string;
-}
 
 export async function sendOrderConfirmation(order: {
   id: string;

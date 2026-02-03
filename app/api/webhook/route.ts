@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { MercadoPagoConfig, Payment } from "mercadopago";
 import prisma from "@/lib/prisma";
 import { sendOrderConfirmation } from "@/lib/email";
+import { OrderItem } from "@/types";
+import { Prisma } from "@prisma/client";
 
 // Webhook para receber notificações do Mercado Pago
 export async function POST(request: NextRequest) {
@@ -42,7 +44,7 @@ export async function POST(request: NextRequest) {
         create: {
           paymentId: String(paymentId),
           status: paymentInfo.status || "pending",
-          items: (paymentInfo.additional_info?.items || []) as any,
+          items: (paymentInfo.additional_info?.items || []) as Prisma.InputJsonValue,
           total: paymentInfo.transaction_amount || 0,
           customerEmail: paymentInfo.payer?.email || null,
           customerName:
@@ -70,7 +72,7 @@ export async function POST(request: NextRequest) {
             total: order.total,
             customerEmail: order.customerEmail,
             customerName: order.customerName,
-            items: Array.isArray(order.items) ? order.items : [],
+            items: (Array.isArray(order.items) ? order.items : []) as unknown as OrderItem[],
           });
         }
       }

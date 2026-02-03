@@ -27,6 +27,17 @@ export interface Product {
   wholesaleOptions: WholesaleOption[];
 }
 
+export interface OrderItem {
+  product?: {
+    id?: string;
+    name: string;
+    image?: string | null;
+  };
+  quantity: number;
+  unitPrice: number;
+  selectedLetter?: string;
+}
+
 export interface ActionResponse {
   success?: boolean;
   error?: string;

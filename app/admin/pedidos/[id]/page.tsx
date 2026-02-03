@@ -12,6 +12,7 @@ import {
   FaCreditCard,
 } from "react-icons/fa";
 import Image from "next/image";
+import { OrderItem } from "@/types";
 
 export const metadata: Metadata = {
   title: "Detalhes do Pedido | Admin",
@@ -83,18 +84,7 @@ export default async function PedidoDetalhesPage({ params }: Props) {
 
   const statusInfo = getStatusInfo(order.status);
   const StatusIcon = statusInfo.icon;
-  const items = Array.isArray(order.items) ? order.items : [];
-
-  interface OrderItem {
-    product?: {
-      id: string;
-      name: string;
-      image: string | null;
-    };
-    quantity: number;
-    unitPrice: number;
-    selectedLetter?: string;
-  }
+  const items = (Array.isArray(order.items) ? order.items : []) as unknown as OrderItem[];
 
   return (
     <div className="min-h-screen bg-linear-to-br from-pink-50 via-purple-50 to-blue-50 py-12 px-4">
@@ -150,12 +140,11 @@ export default async function PedidoDetalhesPage({ params }: Props) {
                 {items.length === 0 ? (
                   <p className="text-slate-500">Nenhum item encontrado</p>
                 ) : (
-                  (items as unknown as OrderItem[]).map(
-                    (item, index: number) => (
-                      <div
-                        key={index}
-                        className="flex gap-4 pb-4 border-b border-slate-100 last:border-0"
-                      >
+                  items.map((item, index: number) => (
+                    <div
+                      key={index}
+                      className="flex gap-4 pb-4 border-b border-slate-100 last:border-0"
+                    >
                         {item.product?.image && (
                           <div className="w-20 h-20 relative rounded-lg overflow-hidden bg-slate-100 shrink-0">
                             <Image
@@ -185,7 +174,7 @@ export default async function PedidoDetalhesPage({ params }: Props) {
                           </div>
                         </div>
                       </div>
-                    ),
+                    )
                   )
                 )}
               </div>

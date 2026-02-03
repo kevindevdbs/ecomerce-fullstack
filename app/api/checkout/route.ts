@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { MercadoPagoConfig, Preference } from "mercadopago";
 import prisma from "@/lib/prisma";
+import { Prisma } from "@prisma/client";
 
 // Inicializa o cliente do Mercado Pago
 const client = new MercadoPagoConfig({
@@ -93,7 +94,7 @@ export async function POST(request: NextRequest) {
       data: {
         preferenceId: result.id,
         status: "pending",
-        items: items as any,
+        items: items as unknown as Prisma.InputJsonValue,
         total: totalAmount,
       },
     });
