@@ -93,7 +93,7 @@ export async function POST(request: NextRequest) {
       data: {
         preferenceId: result.id,
         status: "pending",
-        items: items,
+        items: items as any,
         total: totalAmount,
       },
     });

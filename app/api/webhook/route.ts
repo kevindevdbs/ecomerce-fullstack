@@ -42,7 +42,7 @@ export async function POST(request: NextRequest) {
         create: {
           paymentId: String(paymentId),
           status: paymentInfo.status || "pending",
-          items: paymentInfo.additional_info?.items || [],
+          items: (paymentInfo.additional_info?.items || []) as any,
           total: paymentInfo.transaction_amount || 0,
           customerEmail: paymentInfo.payer?.email || null,
           customerName:
