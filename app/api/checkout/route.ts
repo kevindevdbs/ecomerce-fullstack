@@ -74,11 +74,21 @@ export async function POST(request: NextRequest) {
     const result = await preference.create({
       body: {
         items: preferenceItems,
+        payment_methods: {
+          excluded_payment_methods: [],
+          excluded_payment_types: [],
+          installments: 12,
+          default_installments: 1,
+        },
         back_urls: {
           success: `${baseUrl}/pagamento/sucesso`,
           failure: `${baseUrl}/pagamento/falha`,
           pending: `${baseUrl}/pagamento/pendente`,
         },
+        auto_return: "approved" as const,
+        notification_url: `${baseUrl}/api/webhook`,
+        statement_descriptor: "LOJA ARTESANAL",
+        external_reference: `order-${Date.now()}`,
       },
     });
 

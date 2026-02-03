@@ -84,7 +84,9 @@ export default async function PedidoDetalhesPage({ params }: Props) {
 
   const statusInfo = getStatusInfo(order.status);
   const StatusIcon = statusInfo.icon;
-  const items = (Array.isArray(order.items) ? order.items : []) as unknown as OrderItem[];
+  const items = (Array.isArray(order.items)
+    ? order.items
+    : []) as unknown as OrderItem[];
 
   return (
     <div className="min-h-screen bg-linear-to-br from-pink-50 via-purple-50 to-blue-50 py-12 px-4">
@@ -145,37 +147,36 @@ export default async function PedidoDetalhesPage({ params }: Props) {
                       key={index}
                       className="flex gap-4 pb-4 border-b border-slate-100 last:border-0"
                     >
-                        {item.product?.image && (
-                          <div className="w-20 h-20 relative rounded-lg overflow-hidden bg-slate-100 shrink-0">
-                            <Image
-                              src={item.product.image}
-                              alt={item.product?.name || "Produto"}
-                              fill
-                              className="object-cover"
-                            />
-                          </div>
+                      {item.product?.image && (
+                        <div className="w-20 h-20 relative rounded-lg overflow-hidden bg-slate-100 shrink-0">
+                          <Image
+                            src={item.product.image}
+                            alt={item.product?.name || "Produto"}
+                            fill
+                            className="object-cover"
+                          />
+                        </div>
+                      )}
+                      <div className="flex-1">
+                        <h3 className="font-bold text-slate-800">
+                          {item.product?.name || "Produto"}
+                        </h3>
+                        {item.selectedLetter && (
+                          <p className="text-sm text-purple-600 font-semibold">
+                            Letra: {item.selectedLetter}
+                          </p>
                         )}
-                        <div className="flex-1">
-                          <h3 className="font-bold text-slate-800">
-                            {item.product?.name || "Produto"}
-                          </h3>
-                          {item.selectedLetter && (
-                            <p className="text-sm text-purple-600 font-semibold">
-                              Letra: {item.selectedLetter}
-                            </p>
-                          )}
-                          <div className="flex items-center justify-between mt-2">
-                            <p className="text-sm text-slate-600">
-                              Qtd: {item.quantity}x
-                            </p>
-                            <p className="font-bold text-slate-800">
-                              R$ {(item.unitPrice * item.quantity).toFixed(2)}
-                            </p>
-                          </div>
+                        <div className="flex items-center justify-between mt-2">
+                          <p className="text-sm text-slate-600">
+                            Qtd: {item.quantity}x
+                          </p>
+                          <p className="font-bold text-slate-800">
+                            R$ {(item.unitPrice * item.quantity).toFixed(2)}
+                          </p>
                         </div>
                       </div>
-                    )
-                  )
+                    </div>
+                  ))
                 )}
               </div>
 

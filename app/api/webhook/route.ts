@@ -44,7 +44,8 @@ export async function POST(request: NextRequest) {
         create: {
           paymentId: String(paymentId),
           status: paymentInfo.status || "pending",
-          items: (paymentInfo.additional_info?.items || []) as Prisma.InputJsonValue,
+          items: (paymentInfo.additional_info?.items ||
+            []) as Prisma.InputJsonValue,
           total: paymentInfo.transaction_amount || 0,
           customerEmail: paymentInfo.payer?.email || null,
           customerName:
@@ -72,7 +73,9 @@ export async function POST(request: NextRequest) {
             total: order.total,
             customerEmail: order.customerEmail,
             customerName: order.customerName,
-            items: (Array.isArray(order.items) ? order.items : []) as unknown as OrderItem[],
+            items: (Array.isArray(order.items)
+              ? order.items
+              : []) as unknown as OrderItem[],
           });
         }
       }
