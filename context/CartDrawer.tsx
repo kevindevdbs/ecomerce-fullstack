@@ -1,9 +1,10 @@
 "use client";
 
 import Image from "next/image";
-import { X, Plus, Minus, Trash2, ShoppingBag, ArrowRight } from "lucide-react";
+import { X, Plus, Minus, Trash2, ShoppingBag } from "lucide-react";
 import { useCart } from "@/context/CartContext";
 import { useEffect, useState } from "react";
+import { FaCreditCard, FaWhatsapp } from "react-icons/fa";
 
 export default function CartDrawer() {
   const {
@@ -17,7 +18,77 @@ export default function CartDrawer() {
   } = useCart();
 
   const [mounted, setMounted] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
+
   useEffect(() => setMounted(true), []);
+
+  const handleMercadoPagoCheckout = async () => {
+    setIsProcessing(true);
+    try {
+      const items = cartItems.map((item) => ({
+        product: {
+          id: item.product.id,
+          name: item.product.name,
+          description: "",
+          image: item.product.image,
+        },
+        quantity: item.quantity,
+        unitPrice: getItemPrice(item),
+        selectedLetter: item.selectedLetter,
+      }));
+
+      const response = await fetch("/api/checkout", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ items }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        // Mostra mensagem de erro mais detalhada
+        const errorMsg = data.hint
+          ? `${data.error}\n\n${data.hint}`
+          : data.error || "Erro ao processar pagamento";
+        throw new Error(errorMsg);
+      }
+
+      // Redireciona para o checkout do Mercado Pago em nova aba
+      // Em produção, use init_point. Em desenvolvimento/sandbox, use sandbox_init_point
+      const checkoutUrl = data.sandbox_init_point || data.init_point;
+
+      if (!checkoutUrl) {
+        throw new Error("URL de checkout não recebida do Mercado Pago");
+      }
+
+      // Abre em nova aba ao invés de redirecionar na mesma
+      window.open(checkoutUrl, "_blank");
+      closeCart();
+    } catch (error: any) {
+      console.error("Erro ao processar checkout:", error);
+      alert(error.message || "Erro ao processar pagamento. Tente novamente.");
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  const handleWhatsAppCheckout = () => {
+    const message = `Olá! Gostaria de finalizar meu pedido.\n\nItens:\n${cartItems
+      .map(
+        (i) =>
+          `- ${i.quantity}x ${i.product.name}\n  Preço Un: R$ ${getItemPrice(i).toFixed(2)}`,
+      )
+      .join(
+        "\n",
+      )}\n\nTotal Final: R$ ${cartTotal.toFixed(2)}\n\nAguardo o retorno. Muito obrigado!`;
+
+    window.open(
+      `https://wa.me/5531994773257?text=${encodeURIComponent(message)}`,
+      "_blank",
+    );
+  };
 
   if (!mounted) return null;
 
@@ -153,25 +224,24 @@ export default function CartDrawer() {
                 R$ {cartTotal.toFixed(2).replace(".", ",")}
               </span>
             </div>
-            <button
-              className="w-full py-4 bg-linear-to-r from-pink-500 to-purple-600 text-white font-bold rounded-xl hover:scale-[1.02] transition-all flex items-center justify-center gap-2 shadow-lg"
-              onClick={() => {
-                const message = `Olá! Gostaria de finalizar meu pedido.\n\nItens:\n${cartItems
-                  .map(
-                    (i) =>
-                      `- ${i.quantity}x ${i.product.name}\n  Preço Un: R$ ${getItemPrice(i).toFixed(2)}`,
-                  )
-                  .join(
-                    "\n",
-                  )}\n\nTotal Final: R$ ${cartTotal.toFixed(2)}\n\nAguardo o retorno. Muito obrigado!`;
 
-                window.open(
-                  `https://wa.me/5531994773257?text=${encodeURIComponent(message)}`,
-                  "_blank",
-                );
-              }}
+            {/* Botão Mercado Pago */}
+            <button
+              className="w-full py-4 bg-linear-to-r from-blue-500 to-cyan-600 text-white font-bold rounded-xl hover:scale-[1.02] transition-all flex items-center justify-center gap-2 shadow-lg mb-3 disabled:opacity-50 disabled:cursor-not-allowed"
+              onClick={handleMercadoPagoCheckout}
+              disabled={isProcessing}
             >
-              Finalizar no WhatsApp <ArrowRight size={20} />
+              <FaCreditCard size={20} />
+              {isProcessing ? "Processando..." : "Pagar com Mercado Pago"}
+            </button>
+
+            {/* Botão WhatsApp */}
+            <button
+              className="w-full py-4 bg-linear-to-r from-green-500 to-green-600 text-white font-bold rounded-xl hover:scale-[1.02] transition-all flex items-center justify-center gap-2 shadow-lg"
+              onClick={handleWhatsAppCheckout}
+            >
+              <FaWhatsapp size={20} />
+              Finalizar no WhatsApp
             </button>
           </div>
         )}

@@ -1,5 +1,3 @@
-// prisma/schema.prisma
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -12,17 +10,16 @@ model Product {
   id                 Int               @id @default(autoincrement())
   name               String
   image              String
-  additionalImages   String[]          
+  additionalImages   String[]
   categoryId         Int
-  category           Category          @relation(fields: [categoryId], references: [id])
   price              Float
   shortDescription   String
   fullDescription    String
   details            String[]
-  isVisible          Boolean       @default(true)
+  isVisible          Boolean           @default(true)
   hasLetterSelection Boolean?          @default(false)
+  category           Category          @relation(fields: [categoryId], references: [id])
   wholesaleOptions   WholesaleOption[] @relation("WholesaleOptions")
-  
 }
 
 model WholesaleOption {
@@ -34,9 +31,24 @@ model WholesaleOption {
 }
 
 model Category {
-  id       Int       @id @default(autoincrement())
-  name     String    @unique
-  image    String?
-  isVisible Boolean  @default(true)
-  products Product[]
+  id        Int       @id @default(autoincrement())
+  name      String    @unique
+  image     String?
+  isVisible Boolean   @default(true)
+  products  Product[]
+}
+
+model Order {
+  id            String   @id @default(cuid())
+  paymentId     String?  @unique
+  preferenceId  String?
+  status        String
+  items         Json
+  total         Float
+  customerEmail String?
+  customerName  String?
+  customerPhone String?
+  paymentMethod String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
 }
