@@ -33,94 +33,103 @@ export async function POST(request: NextRequest) {
 
       console.log(`💰 Processando pagamento ${paymentId}`);
 
-      // Buscar detalhes do pagamento
-      const client = new MercadoPagoConfig({
-        accessToken: process.env.MERCADOPAGO_ACCESS_TOKEN || "",
-      });
-      const payment = new Payment(client);
-      const paymentInfo = await payment.get({ id: paymentId });
-
-      console.log(`📊 Status do pagamento: ${paymentInfo.status}`);
-      console.log(
-        `📋 Dados COMPLETOS do pagamento:`,
-        JSON.stringify(paymentInfo, null, 2),
-      );
-
-      // Buscar pedido existente por diferentes identificadores
-      const externalReference = paymentInfo.external_reference;
-
-      console.log(`🔍 Procurando pedido com:`, {
-        paymentId,
-        externalReference,
-        preferenceId: paymentInfo.metadata?.preference_id,
-      });
-
-      // Tentar encontrar o pedido existente
-      let existingOrder = await prisma.order.findUnique({
-        where: { paymentId: String(paymentId) },
-      });
-
-      // Se não encontrar por paymentId, tentar por externalReference
-      if (!existingOrder && externalReference) {
-        existingOrder = await prisma.order.findFirst({
-          where: { externalReference: externalReference },
+      try {
+        // Buscar detalhes do pagamento
+        const client = new MercadoPagoConfig({
+          accessToken: process.env.MERCADOPAGO_ACCESS_TOKEN || "",
         });
+        const payment = new Payment(client);
+        const paymentInfo = await payment.get({ id: paymentId });
+
+        console.log(`📊 Status do pagamento: ${paymentInfo.status}`);
+        console.log(
+          `📋 Dados COMPLETOS do pagamento:`,
+          JSON.stringify(paymentInfo, null, 2),
+        );
+
+        // Buscar pedido existente por diferentes identificadores
+        const externalReference = paymentInfo.external_reference;
+
+        console.log(`🔍 Procurando pedido com:`, {
+          paymentId,
+          externalReference,
+          preferenceId: paymentInfo.metadata?.preference_id,
+        });
+
+        // Tentar encontrar o pedido existente
+        let existingOrder = await prisma.order.findUnique({
+          where: { paymentId: String(paymentId) },
+        });
+
+        // Se não encontrar por paymentId, tentar por externalReference
+        if (!existingOrder && externalReference) {
+          existingOrder = await prisma.order.findFirst({
+            where: { externalReference: externalReference },
+          });
+        }
+
+        console.log(
+          `🔍 Pedido encontrado: ${existingOrder ? existingOrder.id : "Nenhum"}`,
+        );
+
+        // Atualizar ou criar pedido no banco
+        const orderData = {
+          paymentId: String(paymentId),
+          externalReference: externalReference || undefined,
+          status: paymentInfo.status || "pending",
+          items: (paymentInfo.additional_info?.items ||
+            []) as Prisma.InputJsonValue,
+          total: paymentInfo.transaction_amount || 0,
+          customerEmail: paymentInfo.payer?.email || null,
+          customerName:
+            `${paymentInfo.payer?.first_name || ""} ${paymentInfo.payer?.last_name || ""}`.trim() ||
+            null,
+          customerPhone: paymentInfo.payer?.phone?.number || null,
+          paymentMethod: paymentInfo.payment_method_id || null,
+          updatedAt: new Date(),
+        };
+
+        let order;
+        if (existingOrder) {
+          // Atualizar pedido existente
+          order = await prisma.order.update({
+            where: { id: existingOrder.id },
+            data: orderData,
+          });
+          console.log(`✅ Pedido ${order.id} atualizado`);
+        } else {
+          // Criar novo pedido
+          order = await prisma.order.create({
+            data: orderData,
+          });
+          console.log(`✅ Novo pedido ${order.id} criado`);
+        }
+      } catch (paymentError) {
+        console.error("❌ Erro ao buscar/processar pagamento:");
+        console.error("Erro completo:", JSON.stringify(paymentError, null, 2));
+        console.error("Tipo do erro:", typeof paymentError);
+        console.error("Erro string:", String(paymentError));
+
+        // Se for um erro do Mercado Pago, extrair mais informações
+        if (paymentError && typeof paymentError === "object") {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          const errorObj = paymentError as any;
+          console.error("Status:", errorObj.status);
+          console.error("Message:", errorObj.message);
+          console.error("Cause:", JSON.stringify(errorObj.cause, null, 2));
+        }
+
+        // Retornar sucesso mesmo com erro para não bloquear o webhook
+        console.log("⚠️ Ignorando erro e retornando sucesso para não retentar");
+        return NextResponse.json(
+          {
+            success: true,
+            warning: "Erro ao processar pagamento",
+            error: String(paymentError),
+          },
+          { status: 200 },
+        );
       }
-
-      console.log(
-        `🔍 Pedido encontrado: ${existingOrder ? existingOrder.id : "Nenhum"}`,
-      );
-
-      // Atualizar ou criar pedido no banco
-      const orderData = {
-        paymentId: String(paymentId),
-        externalReference: externalReference || undefined,
-        status: paymentInfo.status || "pending",
-        items: (paymentInfo.additional_info?.items ||
-          []) as Prisma.InputJsonValue,
-        total: paymentInfo.transaction_amount || 0,
-        customerEmail: paymentInfo.payer?.email || null,
-        customerName:
-          `${paymentInfo.payer?.first_name || ""} ${paymentInfo.payer?.last_name || ""}`.trim() ||
-          null,
-        customerPhone: paymentInfo.payer?.phone?.number || null,
-        paymentMethod: paymentInfo.payment_method_id || null,
-        updatedAt: new Date(),
-      };
-
-      let order;
-      if (existingOrder) {
-        // Atualizar pedido existente
-        order = await prisma.order.update({
-          where: { id: existingOrder.id },
-          data: orderData,
-        });
-        console.log(`✅ Pedido ${order.id} atualizado`);
-      } else {
-        // Criar novo pedido
-        order = await prisma.order.create({
-          data: orderData,
-        });
-        console.log(`✅ Novo pedido ${order.id} criado`);
-      }
-
-      // Enviar email de confirmação se aprovado (DESABILITADO - Requer domínio próprio)
-      // if (paymentInfo.status === "approved") {
-      //   if (order && order.customerEmail && order.customerName) {
-      //     console.log(
-      //       `📧 Enviando email de confirmação para ${order.customerEmail}`,
-      //     );
-      //     await sendOrderConfirmation({
-      //       id: order.id,
-      //       total: order.total,
-      //       customerEmail: order.customerEmail,
-      //       customerName: order.customerName,
-      //       items: (Array.isArray(order.items)
-      //         ? order.items
-      //         : []) as unknown as OrderItem[],
-      //     });
-      //   }
-      // }
     }
 
     console.log("✅ Webhook processado com sucesso!");
@@ -131,7 +140,13 @@ export async function POST(request: NextRequest) {
     );
   } catch (error) {
     console.error("=".repeat(60));
-    console.error("❌ ERRO NO WEBHOOK:");
+    console.error("❌ ERRO GERAL NO WEBHOOK:");
+    console.error("Tipo:", typeof error);
+    console.error("String:", String(error));
+    console.error(
+      "JSON:",
+      JSON.stringify(error, Object.getOwnPropertyNames(error), 2),
+    );
     console.error(
       "Mensagem:",
       error instanceof Error ? error.message : String(error),
