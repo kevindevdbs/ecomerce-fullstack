@@ -8,6 +8,7 @@ import {
   Eye,
   LayoutGrid,
   Image as ImageIcon,
+  ShoppingCart,
 } from "lucide-react";
 import DeleteProductButton from "@/components/admin/DeleteProductButton";
 
@@ -43,7 +44,13 @@ export default async function AdminPage() {
               Gerencie seus produtos e categorias.
             </p>
           </div>
-          <div className="flex gap-3 w-full md:w-auto">
+          <div className="flex gap-3 w-full md:w-auto flex-wrap">
+            <Link
+              href="/admin/pedidos"
+              className="flex-1 md:flex-none flex items-center justify-center gap-2 bg-purple-600 text-white border border-purple-600 px-5 py-3 rounded-full font-bold hover:bg-purple-700 transition-all"
+            >
+              <ShoppingCart size={18} /> Pedidos
+            </Link>
             <Link
               href="/admin/categorias"
               className="flex-1 md:flex-none flex items-center justify-center gap-2 bg-white text-slate-700 border border-slate-200 px-5 py-3 rounded-full font-bold hover:bg-slate-50 transition-all"

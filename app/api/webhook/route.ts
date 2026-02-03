@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { MercadoPagoConfig, Payment } from "mercadopago";
 import prisma from "@/lib/prisma";
-import { sendOrderConfirmation } from "@/lib/email";
 import { OrderItem } from "@/types";
 import { Prisma } from "@prisma/client";
 
@@ -95,23 +94,23 @@ export async function POST(request: NextRequest) {
         console.log(`✅ Novo pedido ${order.id} criado`);
       }
 
-      // Enviar email de confirmação se aprovado
-      if (paymentInfo.status === "approved") {
-        if (order && order.customerEmail && order.customerName) {
-          console.log(
-            `📧 Enviando email de confirmação para ${order.customerEmail}`,
-          );
-          await sendOrderConfirmation({
-            id: order.id,
-            total: order.total,
-            customerEmail: order.customerEmail,
-            customerName: order.customerName,
-            items: (Array.isArray(order.items)
-              ? order.items
-              : []) as unknown as OrderItem[],
-          });
-        }
-      }
+      // Enviar email de confirmação se aprovado (DESABILITADO - Requer domínio próprio)
+      // if (paymentInfo.status === "approved") {
+      //   if (order && order.customerEmail && order.customerName) {
+      //     console.log(
+      //       `📧 Enviando email de confirmação para ${order.customerEmail}`,
+      //     );
+      //     await sendOrderConfirmation({
+      //       id: order.id,
+      //       total: order.total,
+      //       customerEmail: order.customerEmail,
+      //       customerName: order.customerName,
+      //       items: (Array.isArray(order.items)
+      //         ? order.items
+      //         : []) as unknown as OrderItem[],
+      //     });
+      //   }
+      // }
     }
 
     return NextResponse.json({ success: true }, { status: 200 });

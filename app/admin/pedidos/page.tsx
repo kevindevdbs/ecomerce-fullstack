@@ -2,6 +2,7 @@ import { Metadata } from "next";
 import Link from "next/link";
 import prisma from "@/lib/prisma";
 import { FaEye, FaCheckCircle, FaClock, FaTimesCircle } from "react-icons/fa";
+import DeleteOrderButton from "@/components/admin/DeleteOrderButton";
 
 export const metadata: Metadata = {
   title: "Pedidos | Admin",
@@ -185,13 +186,19 @@ export default async function PedidosPage() {
                         })}
                       </td>
                       <td className="px-6 py-4 text-center">
-                        <Link
-                          href={`/admin/pedidos/${order.id}`}
-                          className="inline-flex items-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors text-sm font-semibold"
-                        >
-                          <FaEye />
-                          Ver Detalhes
-                        </Link>
+                        <div className="flex items-center justify-center gap-2">
+                          <Link
+                            href={`/admin/pedidos/${order.id}`}
+                            className="inline-flex items-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors text-sm font-semibold"
+                          >
+                            <FaEye />
+                            Ver Detalhes
+                          </Link>
+                          <DeleteOrderButton
+                            orderId={order.id}
+                            orderReference={order.id.substring(0, 8)}
+                          />
+                        </div>
                       </td>
                     </tr>
                   ))
