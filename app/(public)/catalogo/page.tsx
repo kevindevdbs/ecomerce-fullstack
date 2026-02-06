@@ -1,35 +1,28 @@
 import prisma from "@/lib/prisma";
-import HeroSection from "@/app/(public)/components/home/HeroSection";
-import FeaturedProducts from "@/app/(public)/components/home/FeaturedProducts";
-import CategoryGrid from "@/app/(public)/components/home/CategoryGrid";
+import CatalogPage from "../components/catalog/CatalogClient";
 
-export default async function Home() {
-  // Executando queries em paralelo para melhor performance
+export const dynamic = "force-dynamic";
+
+export default async function Catalogo() {
   const [productsRaw, categoriesRaw] = await Promise.all([
     prisma.product.findMany({
       where: { isVisible: true },
-      take: 8,
       orderBy: { id: "desc" },
       select: {
         id: true,
         name: true,
-        image: true,
         price: true,
+        image: true,
+        additionalImages: true,
+        categoryId: true,
         shortDescription: true,
         fullDescription: true,
-        additionalImages: true,
         details: true,
         isVisible: true,
         hasLetterSelection: true,
         wholesaleOptions: true,
-        categoryId: true,
         category: {
-          select: {
-            id: true,
-            name: true,
-            image: true,
-            isVisible: true,
-          },
+          select: { name: true, id: true, image: true, isVisible: true },
         },
       },
     }),
@@ -44,23 +37,17 @@ export default async function Home() {
     }),
   ]);
 
-  // Normalizando dados para os componentes
+  // Normalização de dados para o Client Component
   const products = productsRaw.map((product) => ({
     ...product,
     image: product.image || "",
+    category: product.category, // Já está correto pelo prisma
   }));
 
-  // Normalizando categorias
   const categories = categoriesRaw.map((category) => ({
     ...category,
     image: category.image || "",
   }));
 
-  return (
-    <>
-      <HeroSection />
-      <FeaturedProducts products={products} />
-      <CategoryGrid categories={categories} />
-    </>
-  );
+  return <CatalogPage products={products} categories={categories} />;
 }

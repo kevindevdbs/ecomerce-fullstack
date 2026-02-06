@@ -66,9 +66,12 @@ export default function CartDrawer() {
       // Abre em nova aba ao invés de redirecionar na mesma
       window.open(checkoutUrl, "_blank");
       closeCart();
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Erro ao processar checkout:", error);
-      alert(error.message || "Erro ao processar pagamento. Tente novamente.");
+      alert(
+        (error instanceof Error ? error.message : String(error)) ||
+          "Erro ao processar pagamento. Tente novamente."
+      );
     } finally {
       setIsProcessing(false);
     }

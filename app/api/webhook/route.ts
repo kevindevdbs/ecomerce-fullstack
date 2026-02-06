@@ -148,6 +148,11 @@ export async function POST(request: NextRequest) {
           updatedAt: new Date(),
         };
 
+        console.log(
+          "💾 Dados que serão salvos:",
+          JSON.stringify(orderData, null, 2),
+        );
+
         let order;
         if (existingOrder) {
           // Atualizar pedido existente

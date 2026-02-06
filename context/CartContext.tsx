@@ -5,6 +5,7 @@ import {
   useContext,
   useState,
   useEffect,
+  useRef,
   ReactNode,
 } from "react";
 import { Product, WholesaleOption } from "@/types";
@@ -40,27 +41,26 @@ interface CartContextType {
 const CartContext = createContext<CartContextType | undefined>(undefined);
 
 export function CartProvider({ children }: { children: ReactNode }) {
-  const [cartItems, setCartItems] = useState<CartItem[]>([]);
-  const [isCartOpen, setIsCartOpen] = useState(false);
-  const [isLoaded, setIsLoaded] = useState(false);
-
-  useEffect(() => {
+  const [cartItems, setCartItems] = useState<CartItem[]>(() => {
+    if (typeof window === "undefined") return [];
     const savedCart = localStorage.getItem("@ecommerce:cart");
     if (savedCart) {
       try {
-        setCartItems(JSON.parse(savedCart));
+        return JSON.parse(savedCart);
       } catch (error) {
         console.error("Erro ao carregar carrinho:", error);
       }
     }
-    setIsLoaded(true);
-  }, []);
+    return [];
+  });
+  const [isCartOpen, setIsCartOpen] = useState(false);
+  const isLoaded = useRef(true);
 
   useEffect(() => {
-    if (isLoaded) {
+    if (isLoaded.current) {
       localStorage.setItem("@ecommerce:cart", JSON.stringify(cartItems));
     }
-  }, [cartItems, isLoaded]);
+  }, [cartItems]);
 
   // Função auxiliar para calcular preço baseado na quantidade (Atacado)
   const getItemPrice = (item: CartItem) => {

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useSyncExternalStore } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { Menu, X } from "lucide-react";
@@ -12,6 +12,13 @@ export default function Header() {
 
   // 2. Pegamos a função de abrir e a contagem do contexto
   const { openCart, cartCount } = useCart();
+
+  // Previne erro de hidratação usando useSyncExternalStore
+  const isMounted = useSyncExternalStore(
+    () => () => {}, // subscribe (não precisa de subscription)
+    () => true, // getSnapshot no cliente
+    () => false, // getServerSnapshot no servidor
+  );
 
   const toggleMobileMenu = () => {
     setIsMobileMenuOpen(!isMobileMenuOpen);
@@ -85,7 +92,6 @@ export default function Header() {
                 className="object-cover"
                 fill
                 sizes="48px"
-                
               />
             </Link>
 
@@ -144,7 +150,7 @@ export default function Header() {
               />
 
               {/* 4. ADICIONADO AQUI: Lógica para mostrar o número apenas se tiver itens */}
-              {cartCount > 0 && (
+              {isMounted && cartCount > 0 && (
                 <span className="absolute -top-1.5 -right-1.5 bg-pink-500 text-white text-[10px] font-bold h-5 w-5 flex items-center justify-center rounded-full border-2 border-white animate-in zoom-in">
                   {cartCount}
                 </span>
